@@ -1,4 +1,4 @@
-# taglist
+# Emacs Taglist Mode
 The taglist plugin is a source code browser plugin for Emacs and provides an overview of the structure of the programming language files
 
 The "Tag List" plugin is a source code browser plugin for Emacs and provides
@@ -14,7 +14,7 @@ SQL Tcl Tex Vera Verilog VHDL Vim YACC
 Contains some useful functions features for developers similar to
 those from VisualAssist.  Remember that convenient M-o, M-g and M-m?
 
-## Tag navigation.
+* Tag navigation.
 
    When taglist-list-tags called, a new buffer is shown, containing list of
    different type tags. You can select the tag moving to its line and press
@@ -22,7 +22,7 @@ those from VisualAssist.  Remember that convenient M-o, M-g and M-m?
    method list will be reduced to those which contain the string as a
    substring. Nice highlight is implemented.
 
-## Header <-> Body file switch.
+* Header <-> Body file switch.
 
    You can easily switch between body (c, cpp, cc...) and its corresponding
    header file (h, hpp...) using taglist-switch-h-cpp. The counterpart file
@@ -36,8 +36,8 @@ Suggestion: https://ctags.io/
 
 # Usage:
 
-## Install ctags(exuberant-ctags) package
-## Add convenient keymaps for fast taglist calls in prog-mode
+* Install ctags(exuberant-ctags) package
+* Add convenient keymaps for fast taglist calls in prog-mode
 
 ```elisp
    (defun my-c-mode-common-hook ()
@@ -52,7 +52,7 @@ Suggestion: https://ctags.io/
    (define-key lisp-mode-shared-map (kbd "M-m") 'taglist-list-tags)
 ```
 
-## Open any programming file, press M-m. Try to type any tag name.
+* Open any programming file, press M-m. Try to type any tag name.
 
-## Open any .cpp file.  Press M-o.  If there is .h or .hpp file in the
+* Open any .cpp file.  Press M-o.  If there is .h or .hpp file in the
    same folder, it will be opened.
