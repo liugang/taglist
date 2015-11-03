@@ -43,9 +43,9 @@
 ;;
 ;;    When taglist-list-tags called, a new buffer is shown, containing list of
 ;;    different type tags. You can select the tag moving to its line and press
-;;    ENTER to jump to the method. You also can type a string in the buffer and
-;;    method list will be reduced to those which contain the string as a
-;;    substring. Nice highlight is implemented.
+;;    ENTER to jump to the tag. You also can type a string in the buffer and tag
+;;    list will be reduced to those which contain the string as a substring.
+;;    Nice highlight is implemented.
 
 ;; 2) Header <-> Body file switch.
 ;;
@@ -149,11 +149,11 @@ for example *.hpp <--> *.cpp."
 
 ;; 当搜索的时候方法的集合
 (defvar taglist-tags nil
-  "Collection of methods used when searching for current selection.")
+  "Collection of tags used when searching for current selection.")
 
 ;; 实际的方法
-(defvar taglist-actual-methods nil
-  "Collection of actual methods used when searching for current selection.")
+(defvar taglist-actual-tags nil
+  "Collection of actual tags used when searching for current selection.")
 
 ;; 当前的搜索字符串
 (defvar taglist-search-string nil
@@ -462,7 +462,7 @@ for example *.hpp <--> *.cpp."
 ;; 显示当前buffer的方法/函数列表
 ;;;###autoload
 (defun taglist-list-tags ()
-  "Show method/function list of current buffer in a newly created buffer.
+  "Show tag list of current buffer in a newly created buffer.
 This function is recommended to be bound to some convinient hotkey."
   (interactive)
   (setq taglist-buffer (current-buffer))
@@ -470,20 +470,20 @@ This function is recommended to be bound to some convinient hotkey."
   (setq taglist-current-major-mode major-mode)
 
   ;; (setq taglist-current-tag (semantic-current-tag))
-  (switch-to-buffer (get-buffer-create (concat (buffer-name (current-buffer)) " method list")) t)
+  (switch-to-buffer (get-buffer-create (concat (buffer-name (current-buffer)) " tag list")) t)
   (taglist-mode))
 
 ;; 跳转到指定方法
-(defun taglist-jump-to-method ()
-  "Jump to a method/function, corresponding the current line in method buffer.
-When called standing on a line of method/function list, it closes the list
-buffer and sets the point to a method/function, corresponding the line."
+(defun taglist-jump-to-tag ()
+  "Jump to a tag, corresponding the current line in tag buffer.
+When called standing on a line of tag list, it closes the list
+buffer and sets the point to a tag, corresponding the line."
   (interactive)
 
-  (let ((tag-record (nth (1- (line-number-at-pos)) taglist-actual-methods)))
+  (let ((tag-record (nth (1- (line-number-at-pos)) taglist-actual-tags)))
 
     (if (and tag-record (= 0 (taglist-line tag-record)))
-        (setq tag-record (nth (line-number-at-pos) taglist-actual-methods) )
+        (setq tag-record (nth (line-number-at-pos) taglist-actual-tags) )
       )
 
     (if (and tag-record (taglist-line tag-record))
@@ -499,7 +499,7 @@ buffer and sets the point to a method/function, corresponding the line."
 
           (recenter)
           )
-      (message "The line does not contain method description!")
+      (message "The line does not contain tag description!")
       )
     )
   )
@@ -557,7 +557,7 @@ buffer and sets the point to a method/function, corresponding the line."
 
 ;; 根据搜索字符串更新方法/函数列表
 (defun taglist-search-string-updated ()
-  "Update method/function list according to search string."
+  "Update tag list according to search string."
 
   (message taglist-search-string)
 
@@ -565,7 +565,7 @@ buffer and sets the point to a method/function, corresponding the line."
   ;; (setq types (list "d:Macro" "g:Enum" "s:Struct" "u:Union" "t:Typedef" "v:Variable" "f:Function"))
   (setq types (taglist-get-kinds-map-by-language taglist-current-language))
 
-  (let ((taglist-actual-methods_tmp
+  (let ((taglist-actual-tags_tmp
          ;; remove-if-not 把list中不满足条件的全部删除掉
          (remove-if-not
           (lambda (elt)
@@ -574,10 +574,10 @@ buffer and sets the point to a method/function, corresponding the line."
           taglist-tags)))
 
     ;; ("DEBUG" 11 "d") ("main" 18 "f")
-    (setq taglist-actual-methods (taglist-gen-display-struct types taglist-actual-methods_tmp))
+    (setq taglist-actual-tags (taglist-gen-display-struct types taglist-actual-tags_tmp))
     )
 
-  ;; (message "taglist-actual-methods = %S" taglist-actual-methods)
+  ;; (message "taglist-actual-tags = %S" taglist-actual-tags)
 
   (erase-buffer)
 
@@ -594,7 +594,7 @@ buffer and sets the point to a method/function, corresponding the line."
   ;; )
 
   ;; [cl-struct-taglist "main" 38 "f"]
-  (dolist (tag-record taglist-actual-methods)
+  (dolist (tag-record taglist-actual-tags)
     (insert (concat (taglist-tag tag-record) "\n"))
     )
 
@@ -614,7 +614,7 @@ buffer and sets the point to a method/function, corresponding the line."
           ;; (message "pos = %d, offset = %d" pos offset)
           ;; match: start form 0, overlay: start from 1;
 
-          (setq tag-record (nth (1- (line-number-at-pos pos)) taglist-actual-methods))
+          (setq tag-record (nth (1- (line-number-at-pos pos)) taglist-actual-tags))
           (if (not (= 0 (taglist-line tag-record)))
               (progn
                 (push (make-overlay (+ 1 pos) (+ 1 offset)) taglist-overlays)
@@ -658,7 +658,7 @@ buffer and sets the point to a method/function, corresponding the line."
 
 ;; 退出方法列表buffer
 (defun taglist-escape ()
-  "Kill method list buffer."
+  "Kill tag list buffer."
   (interactive)
   (kill-buffer (current-buffer))
   (switch-to-buffer taglist-buffer))
@@ -691,7 +691,7 @@ buffer and sets the point to a method/function, corresponding the line."
     (taglist-key-itself map (string-to-char " "))
     (taglist-key-itself map (string-to-char "_"))
 
-    (define-key map (kbd "<RET>") 'taglist-jump-to-method)
+    (define-key map (kbd "<RET>") 'taglist-jump-to-tag)
     (define-key map (kbd "<backspace>") 'taglist-backspace-pressed)
     (define-key map (kbd "<ESC>") 'taglist-escape)
     ;; (define-key map (kbd "M-v") 'scroll-up)
@@ -732,7 +732,7 @@ buffer and sets the point to a method/function, corresponding the line."
   ;; 高亮当前tag的行
   ;; taglist-tags =  (("INET_ADDRSTRLEN" 17 "d") ("INET6_ADDRSTRLEN" 18 "d") ("ZERO" 19 "d") ("BUF_SIZE" 20 "d") ("global_var" 22 "v") ("IP4_2_6" 24 "f") ("IP6_2_4" 31 "f") ("main" 38 "f"))
   ;; get current line number; and find range of line nubmer in taglist-tags
-  ;; Set current line corresponding to the current function/method if any
+  ;; Set current line corresponding to the current function/tag if any
   (let ((prev-line 0)
         (curr-line 0)
         (tag-line 0)
@@ -777,7 +777,7 @@ buffer and sets the point to a method/function, corresponding the line."
 
     (let ((line (position-if
                  (lambda (item) (= tag-line (taglist-line item)))
-                 taglist-actual-methods)))
+                 taglist-actual-tags)))
       (when line
         (goto-line (1+ line))))
     )
@@ -962,17 +962,17 @@ f:function;p:procedure;P:package" language-hash-table)
   )
 
 (defun taglist-mode-init ()
-  "Initialize method/function list mode."
+  "Initialize tag list mode."
   ;; 当前的搜索字符串.
-  (make-local-variable 'taglist-search-string)   ;; current method search string
+  (make-local-variable 'taglist-search-string)   ;; current tag search string
   ;; 所有方法的结构体列表.
-  (make-local-variable 'taglist-tags)         ;; list of taglist-method structures
+  (make-local-variable 'taglist-tags)         ;; list of taglist-tag structures
   ;; 包含搜索字符串的所有方法的结构体列表.
-  (make-local-variable 'taglist-actual-methods)  ;; subset of taglist-tags that contain taglist-search string in the name string
+  (make-local-variable 'taglist-actual-tags)  ;; subset of taglist-tags that contain taglist-search string in the name string
   ;; 方法名开始的列.
-  (make-local-variable 'taglist-names-column)    ;; this is the column where method name fields starts
+  (make-local-variable 'taglist-names-column)    ;; this is the column where tag name fields starts
   ;; overlays用于高亮搜索字符串.
-  (make-local-variable 'taglist-overlays)        ;; overlays used to highligh search string matches in method names
+  (make-local-variable 'taglist-overlays)        ;; overlays used to highligh search string matches in tag names
 
   (make-local-variable 'taglist-current-language)
   ;; (make-local-variable 'taglist-current-line)
@@ -1006,7 +1006,7 @@ f:function;p:procedure;P:package" language-hash-table)
 
 ;; 定义mode
 (define-derived-mode taglist-mode nil "Taglist"
-  "EmacsAssist method selection mode.
+  "EmacsAssist tag selection mode.
    \\{taglist-mode-map}
    Turning on Text mode runs the normal hook `taglist-mode-hook'."
   (taglist-mode-init))
