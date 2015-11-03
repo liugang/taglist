@@ -59,7 +59,6 @@ Suggestion: https://ctags.io/
 
 # Screenshot
 
-![Image](../blob/master/images/taglist-c-src.png?raw=true)
+![Image](blob/master/images/taglist-c-src.png?raw=true)
 
-
-![Image](../blob/master/images/taglist-tags.png?raw=true)
+![Image](blob/master/images/taglist-tags.png?raw=true)
