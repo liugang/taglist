@@ -56,3 +56,10 @@ Suggestion: https://ctags.io/
 
 * Open any .cpp file.  Press M-o.  If there is .h or .hpp file in the
    same folder, it will be opened.
+
+# Screenshot
+
+![Image](../blob/master/images/taglist-c-src.png?raw=true)
+
+
+![Image](../blob/master/images/taglist-tags.png?raw=true)
