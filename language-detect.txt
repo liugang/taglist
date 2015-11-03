@@ -1,0 +1,2143 @@
+侦测文件类型的方法:
+
+http://www.gnu.org/software/emacs/manual/html_node/emacs/Choosing-Modes.html
+
+the simplest is to put the mode name in the first nonblank line, preceded and
+followed by ‘-*-’.
+
+When the first line starts with ‘#!’, you usually cannot use the ‘-*-’
+feature on the first line, because the system would get confused when running
+the interpreter. So Emacs looks for ‘-*-’ on the second line in such files as
+well as on the first line. The same is true for man pages which start with the
+magic string ‘'\"’ to specify a list of troff preprocessors.
+
+
+http://lifegoo.pluskid.org/wiki/EmacsMajorMode.html
+你可以显式地为当前的 buffer 选择一个 mode ，但是其实大多数情况 Emacs 会 根据文件名以及出现在文件里面的特殊字符自动选择对应的 mode 。
+
+要显式地选择一种 mode ，可以使用 ``M-x'' 命令，mode 的名字加上 ``-mode'' 就 是设置这个 mode 的命令。例如 ``M-x lisp-mode'' 可以打开 Lisp mode 。
+
+当你访问一个文件的时候，Emacs 一般会根据文件名自动选择正确的 mode ，例 如：当你打开一个文件名以 ``.c'' 结尾的文件时，会自动进入 C mode 。文件名 和 mode 之间的对应关系是由变量 "auto-mode-alist" 来控制的。它是一个表， 表里面的每一个元素有这样的形式：
+
+(REGEXP . MODE-FUNCTION)
+或者是这种形式
+
+(REGEXP MODE-FUNCTION FLAG)
+例如，表里面有一个元素为 ("\\.c\\'" . c-mode) 所以文件名以 ``.c'' 结尾的 文件会使用 C mode 。如果是第二种形式，并且 FLAG 不是 nil ，那么在调用 了 MODE-FUNCTION 之后，匹配到 REGEXP 的后缀将会被丢弃，并继续寻找下一 个匹配。
+
+你也可以在文件的第一个非空白行添加一些特殊的文本告诉 Emacs 对这个文件 使用某个特定的 mode 。这一行应该包括 ``-*-MODENAME-*-'' 的形式，也允许 其他字符出现在这一行，例如：
+
+;-*-Lisp-*-
+告诉 Emacs 在这儿使用 Lisp mode 。这种显式地指定将覆盖通过文件名来选择 的 mode 。另外一种形式是1：
+
+-*- mode: MODENAME;-*-
+这样你可以像这样指定一些局部变量：
+
+-*- mode: MODENAME; VAR: VALUE; ... -*-
+当一个文件的内容以 ``#!'' 开始，他将被当作 Shell Script 。当你访问这样的 文件而他的文件名有没有对应的 major mode 的时候，Emacs 使用第一行的解释 器的名字来选择 mode ，例如 ``perl'' 、``tcl'' 、``bash'' 等。Emacs 会选择合 适那个解释器的 mode 。这样的选择是由变量 ``interpreter-mode-alist'' 来控 制的。
+
+当一个文件的内容以 ``#!'' 开始的时候，你无法在第一行以 ``-*-'' 的形式来指 定 mode ，因为这样会使 ``#!'' 的功能失效。这个时候 Emacs 会查看第二行是 否有 ``-*-'' 的指定 mode 的指令。
+
+但是这样有时候仍然不够用，例如 Scsh 通常要使用到头部两行，这个时候可以 使用 local variables list 的办法，写在文件末尾。这样的列表必须以包含 Local Variables: 的一行开始，并以包含 End: 的一行结束，每一行有 VARIABLE:VALUE 的形式，这里是一个例子：
+
+;; Local Variables: **
+;; mode:lisp **
+;; comment-column:0 **
+;; comment-start: ";; "  **
+;; comment-end:"**" **
+;; End: **
+Emacs 会根据第一行识别出 ;; 是前缀， ** 是后缀，并在处理一下的行的时候 丢弃这些东西，这使得我们可以把这个列表写到注释里面。值得注意的是，如果 要在这里指定 major mode ，应该写在第一行，因为设定 major mode 通常会重 新设定 local variable ，所以在这之前设定的值通常会不起作用。
+
+当你访问一个没有指定 mode 的文件，或者使用 ``C-x b'' 来创建一个新的 buffer 的时候，变量 ``default-major-mode'' 将指定使用哪个 mode 。他的值 一般是 ``fundamental-mode'' 。如果这个变量的值是 nil ，major mode 将会根 据前一个 current buffer 来选取。
+
+当你改变了一个 buffer 的 mode 的时候，你可以用 "M-x normal-mode" 来让 Emacs 自动选择 mode 。这也正是 ``find-file'' 调用来设置 mode 的方法，它 还会处理文件相关的局部变量 (如果有的话) 。
+
+调用命令 ``C-x C-w'' 和 ``set-visited-file-name'' 之后如果新的文件名对应一 个 mode ，那么 Emacs 将进入这个 mode 。但是如果 buffer 的内容指定了一个 mode ，这种情况不会出现。而且，有些 major mode 不允许改变 mode 。你可 以把变量 ``change-major-mode-with-file-name'' 设定为 nil 来关闭这个特性。
+
+Footnote
+1. 可以多次使用 mode ，第一个用于指定 major mode ，后面的用于指定 minor mode 。
+
+
+
+/usr/bin/ctags -f - --format=2 --excmd=pattern --fields=nks --sort=no --language-force=c --c-kinds=dgsutvf "test.c"
+
+--language-force=<language>
+/media/galen_liu/data/apt/exuberant-ctags-5.9~svn20110310/parse.c +85
+	for (i = 0  ;  i < LanguageCount  &&  result == LANG_IGNORE  ;  ++i)
+	{
+		const parserDefinition* const lang = LanguageTable [i];
+		if (lang->name != NULL)
+			if (strcasecmp (name, lang->name) == 0) // 忽略大小写
+				result = i;
+	}
+
+
+       --fields=[+|-]flags
+            Specifies the available extension fields which are to be included in the entries of the tag file (see TAG FILE FORMAT, below,  for  more  information).  The  parameter
+            flags is a set of one-letter flags, each representing one type of extension field to include, with the following meanings (disabled by default unless indicated):
+
+               a   Access (or export) of class members
+               f   File-restricted scoping [enabled]
+               i   Inheritance information
+               k   Kind of tag as a single letter [enabled]
+               K   Kind of tag as full name
+               l   Language of source file containing tag
+               m   Implementation information
+               n   Line number of tag definition
+               s   Scope of tag definition [enabled]
+               S   Signature of routine (e.g. prototype or parameter list)
+               z   Include the "kind:" key in kind field
+               t   Type and name of a variable or typedef as "typeref:" field [enabled]
+
+            Each letter or group of letters may be preceded by either '+' to add it to the default set, or '-' to exclude it. In the absence of any preceding '+' or '-' sign, only
+            those kinds explicitly listed in flags will be included in the output (i.e. overriding the default set). This option is ignored if the option --format=1 has been spec‐
+            ified. The default value of this option is fkst.
+
+       --excmd=type
+            Determines the type of EX command used to locate tags in the source file.  [Ignored in etags mode]
+
+            The valid values for type (either the entire word or the first letter is accepted) are:
+
+            number   Use only line numbers in the tag file for locating tags. This has four advantages:
+                     1.  Significantly reduces the size of the resulting tag file.
+                     2.  Eliminates  failures  to  find tags because the line defining the tag has changed, causing the pattern match to fail (note that some editors, such as vim,
+                         are able to recover in many such instances).
+                     3.  Eliminates finding identical matching, but incorrect, source lines (see BUGS, below).
+                     4.  Retains separate entries in the tag file for lines which are identical in content. In pattern mode, duplicate entries are dropped because the search  pat‐
+                         terns they generate are identical, making the duplicate entries useless.
+
+                     However,  this option has one significant drawback: changes to the source files can cause the line numbers recorded in the tag file to no longer correspond to
+                     the lines in the source file, causing jumps to some tags to miss the target definition by one or more lines. Basically, this option  is  best  used  when  the
+                     source code to which it is applied is not subject to change. Selecting this option type causes the following options to be ignored: -BF.
+
+            pattern  Use  only  search  patterns  for all tags, rather than the line numbers usually used for macro definitions. This has the advantage of not referencing obsolete
+                     line numbers when lines have been added or removed since the tag file was generated.
+
+            mixed    In this mode, patterns are generally used with a few exceptions. For C, line numbers are used for macro definition tags. This was the default format generated
+                     by  the  original  ctags and is, therefore, retained as the default for this option. For Fortran, line numbers are used for common blocks because their corre‐
+                     sponding source lines are generally identical, making pattern searches useless for finding all matches.
+
+
+;; C-h v auto-mode-alist
+
+https://github.com/github/linguist/blob/master/lib/linguist/language.rb#L90
+ ;; STRATEGIES = [
+ ;;   Linguist::Strategy::Modeline, 1. 通过modeline侦测是什么语言
+ ;;   Linguist::Shebang,            2. 通过第一行的Shebang侦测是什么语言
+ ;;   Linguist::Strategy::Filename, 3. 通过文件名来侦测是什么语言
+ ;;   Linguist::Heuristics,         4. 探测文件的内容来侦测是什么语言.
+ ;;   Linguist::Classifier
+]
+
+
+
+$ ctags --list-maps
+Ant      *.build.xml
+Asm      *.asm *.ASM *.s *.S *.A51 *.29[kK] *.[68][68][kKsSxX] *.[xX][68][68]
+Asp      *.asp *.asa
+Awk      *.awk *.gawk *.mawk
+Basic    *.bas *.bi *.bb *.pb
+BETA     *.bet
+C        *.c
+C++      *.c++ *.cc *.cp *.cpp *.cxx *.h *.h++ *.hh *.hp *.hpp *.hxx *.C *.H
+C#       *.cs
+Cobol    *.cbl *.cob *.CBL *.COB
+DosBatch *.bat *.cmd
+Eiffel   *.e
+Erlang   *.erl *.ERL *.hrl *.HRL
+Flex     *.as *.mxml
+Fortran  *.f *.for *.ftn *.f77 *.f90 *.f95 *.F *.FOR *.FTN *.F77 *.F90 *.F95
+Go       *.go
+HTML     *.htm *.html
+Java     *.java
+JavaScript *.js
+Lisp     *.cl *.clisp *.el *.l *.lisp *.lsp
+Lua      *.lua
+Make     *.mak *.mk [Mm]akefile GNUmakefile
+MatLab   *.m
+ObjectiveC *.m *.h
+OCaml    *.ml *.mli
+Pascal   *.p *.pas
+Perl     *.pl *.pm *.plx *.perl
+PHP      *.php *.php3 *.phtml
+Python   *.py *.pyx *.pxd *.pxi *.scons
+REXX     *.cmd *.rexx *.rx
+Ruby     *.rb *.ruby
+Scheme   *.SCM *.SM *.sch *.scheme *.scm *.sm
+Sh       *.sh *.SH *.bsh *.bash *.ksh *.zsh
+SLang    *.sl
+SML      *.sml *.sig
+SQL      *.sql
+Tcl      *.tcl *.tk *.wish *.itcl
+Tex      *.tex
+Vera     *.vr *.vri *.vrh
+Verilog  *.v
+VHDL     *.vhdl *.vhd
+Vim      *.vim
+YACC     *.y
+
+
+
+[galen_liu@inspirit apt]$ ctags --list-kinds
+Ant
+    p  projects 
+    t  targets 
+Asm
+    d  defines
+    l  labels
+    m  macros
+    t  types (structs and records)
+Asp
+    d  constants
+    c  classes
+    f  functions
+    s  subroutines
+    v  variables
+Awk
+    f  functions
+Basic
+    c  constants
+    f  functions
+    l  labels
+    t  types
+    v  variables
+    g  enumerations
+BETA
+    f  fragment definitions
+    p  all patterns [off]
+    s  slots (fragment uses)
+    v  patterns (virtual or rebound)
+C
+    c  classes
+    d  macro definitions
+    e  enumerators (values inside an enumeration)
+    f  function definitions
+    g  enumeration names
+    l  local variables [off]
+    m  class, struct, and union members
+    n  namespaces
+    p  function prototypes [off]
+    s  structure names
+    t  typedefs
+    u  union names
+    v  variable definitions
+    x  external and forward variable declarations [off]
+C++
+    c  classes
+    d  macro definitions
+    e  enumerators (values inside an enumeration)
+    f  function definitions
+    g  enumeration names
+    l  local variables [off]
+    m  class, struct, and union members
+    n  namespaces
+    p  function prototypes [off]
+    s  structure names
+    t  typedefs
+    u  union names
+    v  variable definitions
+    x  external and forward variable declarations [off]
+C#
+    c  classes
+    d  macro definitions
+    e  enumerators (values inside an enumeration)
+    E  events
+    f  fields
+    g  enumeration names
+    i  interfaces
+    l  local variables [off]
+    m  methods
+    n  namespaces
+    p  properties
+    s  structure names
+    t  typedefs
+Cobol
+    d  data items 
+    f  file descriptions (FD, SD, RD) 
+    g  group items 
+    p  paragraphs 
+    P  program ids 
+    s  sections 
+DosBatch
+    l  labels 
+    v  variables 
+Eiffel
+    c  classes
+    f  features
+    l  local entities [off]
+Erlang
+    d  macro definitions
+    f  functions
+    m  modules
+    r  record definitions
+Flex
+    f  functions
+    c  classes
+    m  methods
+    p  properties
+    v  global variables
+    x  mxtags
+Fortran
+    b  block data
+    c  common blocks
+    e  entry points
+    f  functions
+    i  interface contents, generic names, and operators [off]
+    k  type and structure components
+    l  labels
+    L  local, common block, and namelist variables [off]
+    m  modules
+    n  namelists
+    p  programs
+    s  subroutines
+    t  derived types and structures
+    v  program (global) and module variables
+Go
+    p  packages
+    f  functions
+    c  constants
+    t  types
+    v  variables
+HTML
+    a  named anchors 
+    f  JavaScript functions 
+Java
+    c  classes
+    e  enum constants
+    f  fields
+    g  enum types
+    i  interfaces
+    l  local variables [off]
+    m  methods
+    p  packages
+JavaScript
+    f  functions
+    c  classes
+    m  methods
+    p  properties
+    v  global variables
+Lisp
+    f  functions
+Lua
+    f  functions
+Make
+    m  macros
+MatLab
+    f  function 
+    f  function 
+    f  function 
+ObjectiveC
+    i  class interface
+    I  class implementation
+    p  Protocol
+    m  Object's method
+    c  Class' method
+    v  Global variable
+    F  Object field
+    f  A function
+    p  A property
+    t  A type alias
+    s  A type structure
+    e  An enumeration
+    M  A preprocessor macro
+OCaml
+    c  classes
+    m  Object's method
+    M  Module or functor
+    v  Global variable
+    t  Type name
+    f  A function
+    C  A constructor
+    r  A 'structure' field
+    e  An exception
+Pascal
+    f  functions
+    p  procedures
+Perl
+    c  constants
+    f  formats
+    l  labels
+    p  packages
+    s  subroutines
+    d  subroutine declarations [off]
+PHP
+    c  classes 
+    i  interfaces 
+    d  constant definitions 
+    f  functions 
+    v  variables 
+    v  variables 
+    j  javascript functions 
+    j  javascript functions 
+    j  javascript functions 
+Python
+    c  classes
+    f  functions
+    m  class members
+    v  variables
+    i  imports [off]
+REXX
+    s  subroutines 
+Ruby
+    c  classes
+    f  methods
+    m  modules
+    F  singleton methods
+Scheme
+    f  functions
+    s  sets
+Sh
+    f  functions
+SLang
+    f  functions 
+    n  namespaces 
+SML
+    e  exception declarations
+    f  function definitions
+    c  functor definitions
+    s  signature declarations
+    r  structure declarations
+    t  type definitions
+    v  value bindings
+SQL
+    c  cursors
+    d  prototypes [off]
+    f  functions
+    F  record fields
+    l  local variables [off]
+    L  block label
+    P  packages
+    p  procedures
+    r  records [off]
+    s  subtypes
+    t  tables
+    T  triggers
+    v  variables
+    i  indexes
+    e  events
+    U  publications
+    R  services
+    D  domains
+    V  views
+    n  synonyms
+    x  MobiLink Table Scripts
+    y  MobiLink Conn Scripts
+    z  MobiLink Properties 
+Tcl
+    c  classes
+    m  methods
+    p  procedures
+Tex
+    c  chapters
+    s  sections
+    u  subsections
+    b  subsubsections
+    p  parts
+    P  paragraphs
+    G  subparagraphs
+    i  includes
+Vera
+    c  classes
+    d  macro definitions
+    e  enumerators (values inside an enumeration)
+    f  function definitions
+    g  enumeration names
+    l  local variables [off]
+    m  class, struct, and union members
+    p  programs
+    P  function prototypes [off]
+    t  tasks
+    T  typedefs
+    v  variable definitions
+    x  external variable declarations [off]
+Verilog
+    c  constants (define, parameter, specparam)
+    e  events
+    f  functions
+    m  modules
+    n  net data types
+    p  ports
+    r  register data types
+    t  tasks
+VHDL
+    c  constant declarations
+    t  type definitions
+    T  subtype definitions
+    r  record names
+    e  entity declarations
+    C  component declarations [off]
+    d  prototypes [off]
+    f  function prototypes and declarations
+    p  procedure prototypes and declarations
+    P  package definitions
+    l  local definitions [off]
+Vim
+    a  autocommand groups
+    c  user-defined commands
+    f  function definitions
+    m  maps
+    v  variable definitions
+YACC
+    l  labels
+
+
+
+
+https://github.com/github/linguist/blob/master/lib/linguist/languages.yml
+
+1. Ant      *.build.xml
+-----------------------
+Ant
+    p  projects 
+    t  targets 
+
+============================
+Ant Build System:
+  type: data
+  tm_scope: text.xml.ant
+  filenames:
+  - ant.xml
+  - build.xml
+  ace_mode: xml
+
+
+detect by filenames: ant.xml,build.xml
+
+
+
+
+2. Asm      *.asm *.ASM *.s *.S *.A51 *.29[kK] *.[68][68][kKsSxX] *.[xX][68][68]
+-----------------------
+Asm
+    d  defines
+    l  labels
+    m  macros
+    t  types (structs and records)
+
+============================
+Assembly:
+  type: programming
+  color: "#6E4C13"
+  search_term: nasm
+  aliases:
+  - nasm
+  extensions:
+  - .asm
+  - .a51
+  - .inc
+  - .nasm
+  tm_scope: source.asm.x86
+  ace_mode: assembly_x86
+
+
+
+detect by extensions: *.s *.S *.asm *.ASM *.nasm *.a51 *.A51
+(who use this?)       *.29[kK] *.[68][68][kKsSxX] *.[xX][68][68] 
+
+NOTE: too many .inc (in asm, html, pascal, php, sql ), I just ignore it, let user decide file type.
+
+
+3. Asp      *.asp *.asa
+-----------------------
+Asp
+    d  constants
+    c  classes
+    f  functions
+    s  subroutines
+    v  variables
+
+============================
+ASP:
+  type: programming
+  color: "#6a40fd"
+  search_term: aspx-vb
+  tm_scope: text.html.asp
+  aliases:
+  - aspx
+  - aspx-vb
+  extensions:
+  - .asp
+  - .asax
+  - .ascx
+  - .ashx
+  - .asmx
+  - .aspx
+  - .axd
+ace_mode: text
+
+
+detect by extensions: *.asp *.aspx *.asa *.asax *.ascx *.ashx *.asmx *.axd
+
+
+
+
+4. Awk      *.awk *.gawk *.mawk
+-----------------------
+Awk
+    f  functions
+
+============================
+Awk:
+  type: programming
+  extensions:
+  - .awk
+  - .auk
+  - .gawk
+  - .mawk
+  - .nawk
+  interpreters:
+  - awk
+  - gawk
+  - mawk
+  - nawk
+ace_mode: text
+
+
+
+detect by extensions: *.awk *.auk *.gawk *.mawk *.nawk
+
+
+
+5. Basic    *.bas *.bi *.bb *.pb
+-----------------------
+Basic
+    c  constants
+    f  functions
+    l  labels
+    t  types
+    v  variables
+    g  enumerations
+
+============================
+BlitzBasic:
+  type: programming
+  aliases:
+  - b3d
+  - blitz3d
+  - blitzplus
+  - bplus
+  extensions:
+  - .bb
+  - .decls
+  tm_scope: source.blitzmax
+ace_mode: text
+
+PureBasic:
+  type: programming
+  color: "#5a6986"
+  extensions:
+  - .pb
+  - .pbi
+  tm_scope: none
+ace_mode: text
+
+
+Visual Basic:
+  type: programming
+  color: "#945db7"
+  extensions:
+  - .vb
+  - .bas
+  - .cls
+  - .frm
+  - .frx
+  - .vba
+  - .vbhtml
+  - .vbs
+  tm_scope: source.vbnet
+  aliases:
+  - vb.net
+  - vbnet
+ace_mode: text
+
+
+
+detect by extensions: *.bas *.bi *.bb *.pb *.pbi *.decls *.vb *.cls *.frm *.frx *.vba *.vbhtml *.vbs
+
+
+
+6. BETA     *.bet
+-----------------------
+BETA
+    f  fragment definitions
+    p  all patterns [off]
+    s  slots (fragment uses)
+    v  patterns (virtual or rebound)
+
+============================
+
+
+detect by extensions: *.bet
+
+
+
+
+7. C        *.c
+-----------------------
+C
+    c  classes
+    d  macro definitions
+    e  enumerators (values inside an enumeration)
+    f  function definitions
+    g  enumeration names
+    l  local variables [off]
+    m  class, struct, and union members
+    n  namespaces
+    p  function prototypes [off]
+    s  structure names
+    t  typedefs
+    u  union names
+    v  variable definitions
+    x  external and forward variable declarations [off]
+
+============================
+C:
+  type: programming
+  color: "#555555"
+  extensions:
+  - .c
+  - .cats
+  - .h
+  - .idc
+  - .w
+  interpreters:
+  - tcc
+ace_mode: c_cpp
+
+
+
+
+detect by extensions: *.c *.cats *.idc .w
+NOTE: I use C++ parse .h file.
+
+
+
+8. C++      *.c++ *.cc *.cp *.cpp *.cxx *.h *.h++ *.hh *.hp *.hpp *.hxx *.C *.H
+-----------------------
+C++
+    c  classes
+    d  macro definitions
+    e  enumerators (values inside an enumeration)
+    f  function definitions
+    g  enumeration names
+    l  local variables [off]
+    m  class, struct, and union members
+    n  namespaces
+    p  function prototypes [off]
+    s  structure names
+    t  typedefs
+    u  union names
+    v  variable definitions
+    x  external and forward variable declarations [off]
+
+============================
+C++:
+  type: programming
+  ace_mode: c_cpp
+  search_term: cpp
+  color: "#f34b7d"
+  aliases:
+  - cpp
+  extensions:
+  - .cpp
+  - .c++
+  - .cc
+  - .cp
+  - .cxx
+  - .h
+  - .h++
+  - .hh
+  - .hpp
+  - .hxx
+  - .inc
+  - .inl
+  - .ipp
+  - .tcc
+  - .tpp
+
+
+detect by extensions: *.c++ *.cc *.cp *.cpp *.cxx *.h *.h++ *.hh *.hp *.hpp *.hxx *.C *.H .inl .ipp .tcc .tpp
+
+
+
+
+9. C#       *.cs
+-----------------------
+C#
+    c  classes
+    d  macro definitions
+    e  enumerators (values inside an enumeration)
+    E  events
+    f  fields
+    g  enumeration names
+    i  interfaces
+    l  local variables [off]
+    m  methods
+    n  namespaces
+    p  properties
+    s  structure names
+    t  typedefs
+
+============================
+C#:
+  type: programming
+  ace_mode: csharp
+  tm_scope: source.cs
+  search_term: csharp
+  color: "#178600"
+  aliases:
+  - csharp
+  extensions:
+  - .cs
+  - .cshtml
+  - .csx
+
+
+detect by extensions: *.cs *.csx *.cshtml
+
+
+
+
+10. Cobol    *.cbl *.cob *.CBL *.COB
+-----------------------
+Cobol
+    d  data items 
+    f  file descriptions (FD, SD, RD) 
+    g  group items 
+    p  paragraphs 
+    P  program ids 
+    s  sections 
+
+============================
+
+
+detect by extensions: *.cbl *.cob *.CBL *.COB
+
+
+
+
+
+11. DosBatch *.bat *.cmd
+-----------------------
+DosBatch
+    l  labels 
+    v  variables 
+
+============================
+Batchfile:
+  type: programming
+  search_term: bat
+  aliases:
+  - bat
+  - batch
+  - dosbatch
+  - winbatch
+  extensions:
+  - .bat
+  - .cmd
+  tm_scope: source.dosbatch
+ace_mode: batchfile
+
+
+
+detect by extensions: *.bat *.cmd
+
+
+
+12. Eiffel   *.e
+-----------------------
+Eiffel
+    c  classes
+    f  features
+    l  local entities [off]
+
+============================
+Eiffel:
+  type: programming
+  color: "#946d57"
+  extensions:
+  - .e
+ace_mode: eiffel
+
+
+detect by extensions: .e
+
+
+
+
+13. Erlang   *.erl *.ERL *.hrl *.HRL
+-----------------------
+Erlang
+    d  macro definitions
+    f  functions
+    m  modules
+    r  record definitions
+
+============================
+Erlang:
+  type: programming
+  color: "#B83998"
+  extensions:
+  - .erl
+  - .es
+  - .escript
+  - .hrl
+  filenames:
+  - rebar.config
+  - rebar.config.lock
+  - rebar.lock
+  ace_mode: erlang
+  interpreters:
+  - escript
+
+
+1st detect by filenames: rebar.config rebar.config.lock rebar.lock
+2st detect by extensions: *.erl *.ERL *.hrl *.HRL .es .escript
+
+
+
+
+14. Flex     *.as *.mxml
+-----------------------
+Flex
+    f  functions
+    c  classes
+    m  methods
+    p  properties
+    v  global variables
+    x  mxtags
+
+============================
+
+
+detect by extensions: *.as *.mxml
+
+
+
+
+15 .Fortran  *.f *.for *.ftn *.f77 *.f90 *.f95 *.F *.FOR *.FTN *.F77 *.F90 *.F95
+-----------------------
+Fortran
+    b  block data
+    c  common blocks
+    e  entry points
+    f  functions
+    i  interface contents, generic names, and operators [off]
+    k  type and structure components
+    l  labels
+    L  local, common block, and namelist variables [off]
+    m  modules
+    n  namelists
+    p  programs
+    s  subroutines
+    t  derived types and structures
+    v  program (global) and module variables
+
+============================
+FORTRAN:
+  type: programming
+  color: "#4d41b1"
+  extensions:
+  - .f90
+  - .f
+  - .f03
+  - .f08
+  - .f77
+  - .f95
+  - .for
+  - .fpp
+  tm_scope: source.fortran.modern
+  ace_mode: text
+
+
+detect by extensions: *.f *.for *.ftn *.f77 *.f90 *.f95 *.F *.FOR *.FTN *.F77 *.F90 *.F95 .f03 .f08 .fpp
+
+
+
+
+16. Go       *.go
+-----------------------
+Go
+    p  packages
+    f  functions
+    c  constants
+    t  types
+    v  variables
+
+============================
+Go:
+  type: programming
+  color: "#375eab"
+  extensions:
+  - .go
+ace_mode: golang
+
+
+
+detect by extensions: .go
+
+
+
+17. HTML     *.htm *.html
+-----------------------
+HTML
+    a  named anchors 
+    f  JavaScript functions 
+
+============================
+HTML:
+  type: markup
+  tm_scope: text.html.basic
+  ace_mode: html
+  color: "#e44b23"
+  aliases:
+  - xhtml
+  extensions:
+  - .html
+  - .htm
+  - .html.hl
+  - .inc
+  - .st
+  - .xht
+  - .xhtml
+
+
+detect by extensions: .htm .html .html.hl .st .xht .xhtml
+NOTE: too many .inc (in asm, html, pascal, php, sql ), I just ignore it, let user decide file type.
+
+
+18. Java     *.java
+-----------------------
+Java
+    c  classes
+    e  enum constants
+    f  fields
+    g  enum types
+    i  interfaces
+    l  local variables [off]
+    m  methods
+    p  packages
+
+============================
+Java:
+  type: programming
+  ace_mode: java
+  color: "#b07219"
+  extensions:
+- .java
+
+detect by extensions: *.java
+
+
+
+
+
+19. JavaScript *.js
+-----------------------
+JavaScript
+    f  functions
+    c  classes
+    m  methods
+    p  properties
+    v  global variables
+
+============================
+JavaScript:
+  type: programming
+  tm_scope: source.js
+  ace_mode: javascript
+  color: "#f1e05a"
+  aliases:
+  - js
+  - node
+  extensions:
+  - .js
+  - ._js
+  - .bones
+  - .es6
+  - .frag
+  - .gs
+  - .jake
+  - .jsb
+  - .jsfl
+  - .jsm
+  - .jss
+  - .njs
+  - .pac
+  - .sjs
+  - .ssjs
+  - .sublime-build
+  - .sublime-commands
+  - .sublime-completions
+  - .sublime-keymap
+  - .sublime-macro
+  - .sublime-menu
+  - .sublime-mousemap
+  - .sublime-project
+  - .sublime-settings
+  - .sublime-theme
+  - .sublime-workspace
+  - .sublime_metrics
+  - .sublime_session
+  - .xsjs
+  - .xsjslib
+  filenames:
+  - Jakefile
+  interpreters:
+  - node
+
+detect by filenames: Jakefile
+detect by extensions:  .js ._js .bones .es6 .frag .gs .jake .jsb .jsfl .jsm
+ .jss .njs .pac .sjs .ssjs .sublime-build .sublime-commands .sublime-completions
+ .sublime-keymap .sublime-macro .sublime-menu .sublime-mousemap .sublime-project
+ .sublime-settings .sublime-theme .sublime-workspace .sublime_metrics .sublime_session
+ .xsjs .xsjslib
+
+
+
+
+20. Lisp     *.cl *.clisp *.el *.l *.lisp *.lsp
+-----------------------
+Lisp
+    f  functions
+
+============================
+NewLisp:
+  type: programming
+  lexer: NewLisp
+  color: "#87AED7"
+  extensions:
+  - .nl
+  - .lisp
+  - .lsp
+  interpreters:
+  - newlisp
+  tm_scope: source.lisp
+ace_mode: lisp
+
+
+PicoLisp:
+  type: programming
+  extensions:
+  - .l
+  interpreters:
+  - picolisp
+  - pil
+  tm_scope: source.lisp
+ace_mode: lisp
+
+
+Common Lisp:
+  type: programming
+  tm_scope: source.lisp
+  color: "#3fb68b"
+  aliases:
+  - lisp
+  extensions:
+  - .lisp
+  - .asd
+  - .cl
+  - .l
+  - .lsp
+  - .ny
+  - .podsl
+  - .sexp
+  interpreters:
+  - lisp
+  - sbcl
+  - ccl
+  - clisp
+  - ecl
+  ace_mode: lisp
+
+Emacs Lisp:
+  type: programming
+  tm_scope: source.lisp
+  color: "#c065db"
+  aliases:
+  - elisp
+  - emacs
+  filenames:
+  - .emacs
+  - .emacs.desktop
+  extensions:
+  - .el
+  - .emacs
+  - .emacs.desktop
+  ace_mode: lisp
+
+
+detect by filenames: .emacs .emacs.desktop
+detect by extensions: *.cl *.clisp *.el *.l *.lisp *.lsp *.emacs *.emacs.desktop .asd
+.nl .ny .podsl .sexp
+
+
+
+
+21. Lua      *.lua
+-----------------------
+Lua
+    f  functions
+============================
+Lua:
+  type: programming
+  ace_mode: lua
+  color: "#000080"
+  extensions:
+  - .lua
+  - .fcgi
+  - .nse
+  - .pd_lua
+  - .rbxs
+  - .wlua
+  interpreters:
+  - lua
+
+
+
+detect by extensions:  .lua .nse .pd_lua .rbxs .wlua
+
+
+
+22. Make     *.mak *.mk [Mm]akefile GNUmakefile
+-----------------------
+Make
+    m  macros
+
+============================
+Makefile:
+  type: programming
+  color: "#427819"
+  aliases:
+  - bsdmake
+  - make
+  - mf
+  extensions:
+  - .mak
+  - .d
+  - .mk
+  filenames:
+  - GNUmakefile
+  - Kbuild
+  - Makefile
+  - Makefile.inc
+  - makefile
+  interpreters:
+  - make
+ace_mode: makefile
+
+
+detect by filenames: [Mm]akefile GNUmakefile Kbuild Makefile.inc
+detect by extensions: *.mak *.mk .d
+
+
+
+23. MatLab   *.m
+-----------------------
+MatLab
+    f  function 
+
+
+detect by extensions: .m
+NOTE: same as objc, default objc.
+
+
+
+
+24. ObjectiveC  *.m *.h
+-----------------------
+ObjectiveC
+    i  class interface
+    I  class implementation
+    p  Protocol
+    m  Object's method
+    c  Class' method
+    v  Global variable
+    F  Object field
+    f  A function
+    p  A property
+    t  A type alias
+    s  A type structure
+    e  An enumeration
+    M  A preprocessor macro
+
+============================
+Objective-C:
+  type: programming
+  tm_scope: source.objc
+  color: "#438eff"
+  aliases:
+  - obj-c
+  - objc
+  - objectivec
+  extensions:
+  - .m
+  - .h
+ace_mode: objectivec
+
+Objective-C++:
+  type: programming
+  tm_scope: source.objc++
+  color: "#6866fb"
+  aliases:
+  - obj-c++
+  - objc++
+  - objectivec++
+  extensions:
+  - .mm
+  ace_mode: objectivec
+
+
+detect by extensions: .m .mm
+
+
+
+
+25. OCaml    *.ml *.mli
+-----------------------
+OCaml
+    c  classes
+    m  Object's method
+    M  Module or functor
+    v  Global variable
+    t  Type name
+    f  A function
+    C  A constructor
+    r  A 'structure' field
+    e  An exception
+
+============================
+OCaml:
+  type: programming
+  ace_mode: ocaml
+  color: "#3be133"
+  extensions:
+  - .ml
+  - .eliom
+  - .eliomi
+  - .ml4
+  - .mli
+  - .mll
+  - .mly
+  interpreters:
+  - ocaml
+  - ocamlrun
+  tm_scope: source.ocaml
+
+
+
+detect by extensions: *.ml *.mli .eliom .eliomi .ml4 .mll .mly
+
+
+
+26. Pascal   *.p *.pas
+-----------------------
+Pascal
+    f  functions
+    p  procedures
+
+============================
+Pascal:
+  type: programming
+  color: "#b0ce4e"
+  extensions:
+  - .pas
+  - .dfm
+  - .dpr
+  - .inc
+  - .lpr
+  - .pp
+ace_mode: pascal
+
+Component Pascal:
+  type: programming
+  color: "#b0ce4e"
+  extensions:
+  - .cp
+  - .cps
+  tm_scope: source.pascal
+  aliases:
+  - delphi
+  - objectpascal
+ace_mode: pascal
+
+
+
+detect by extensions: *.p *.pas .dfm .dpr .lpr .pp .cp .cps
+
+
+
+
+27. Perl     *.pl *.pm *.plx *.perl
+-----------------------
+Perl
+    c  constants
+    f  formats
+    l  labels
+    p  packages
+    s  subroutines
+    d  subroutine declarations [off]
+
+============================
+
+Perl:
+  type: programming
+  tm_scope: source.perl
+  ace_mode: perl
+  color: "#0298c3"
+  extensions:
+  - .pl
+  - .al
+  - .cgi
+  - .fcgi
+  - .perl
+  - .ph
+  - .plx
+  - .pm
+  - .pod
+  - .psgi
+  - .t
+  interpreters:
+- perl
+
+
+Perl6:
+  type: programming
+  color: "#0000fb"
+  extensions:
+  - .6pl
+  - .6pm
+  - .nqp
+  - .p6
+  - .p6l
+  - .p6m
+  - .pl
+  - .pl6
+  - .pm
+  - .pm6
+  - .t
+  filenames:
+  - Rexfile
+  interpreters:
+  - perl6
+  tm_scope: source.perl.6
+ace_mode: perl
+
+
+detect by filenames: Rexfile
+detect by extensions: *.pl *.pm *.plx *.perl .al .ph .pod .psgi .t
+
+
+
+28. PHP      *.php *.php3 *.phtml
+-----------------------
+PHP
+    c  classes 
+    i  interfaces 
+    d  constant definitions 
+    f  functions 
+    v  variables 
+    j  javascript functions 
+
+============================
+PHP:
+  type: programming
+  tm_scope: text.html.php
+  ace_mode: php
+  color: "#4F5D95"
+  extensions:
+  - .php
+  - .aw
+  - .ctp
+  - .fcgi
+  - .inc
+  - .php3
+  - .php4
+  - .php5
+  - .phps
+  - .phpt
+  filenames:
+  - Phakefile
+  interpreters:
+  - php
+  aliases:
+  - inc
+
+
+HTML+PHP:
+  type: markup
+  tm_scope: text.html.php
+  group: HTML
+  extensions:
+  - .phtml
+  ace_mode: php
+
+detect by filenames: Phakefile
+detect by extensions: *.php *.php3 .php4 .php5 .php7 *.phtml .aw .ctp .phps .phpt
+
+
+
+
+29. Python   *.py *.pyx *.pxd *.pxi *.scons
+-----------------------
+Python
+    c  classes
+    f  functions
+    m  class members
+    v  variables
+    i  imports [off]
+
+============================
+Python:
+  type: programming
+  ace_mode: python
+  color: "#3572A5"
+  extensions:
+  - .py
+  - .cgi
+  - .fcgi
+  - .gyp
+  - .lmi
+  - .pyde
+  - .pyp
+  - .pyt
+  - .pyw
+  - .tac
+  - .wsgi
+  - .xpy
+  filenames:
+  - BUILD
+  - SConscript
+  - SConstruct
+  - Snakefile
+  - wscript
+  interpreters:
+  - python
+  - python2
+  - python3
+  aliases:
+- rusthon
+
+Sage:
+  type: programming
+  group: Python
+  extensions:
+  - .sage
+  - .sagews
+  tm_scope: source.python
+ace_mode: python
+
+
+Cython:
+  type: programming
+  group: Python
+  extensions:
+  - .pyx
+  - .pxd
+  - .pxi
+  aliases:
+  - pyrex
+ace_mode: text
+
+
+NumPy:
+  type: programming
+  group: Python
+  extensions:
+  - .numpy
+  - .numpyw
+  - .numsc
+  tm_scope: none
+ace_mode: text
+
+
+1st detect by filenames: BUILD SConscript SConstruct Snakefile wscript
+
+2st detect by extensions: *.py *.pyx *.pxd *.pxi *.scons .gyp .lmi .pyde .pyp
+.pyt .pyw .tac .wsgi .xpy .sage .sagews .numpy .numpyw .numsc
+
+
+
+
+30. REXX     *.cmd *.rexx *.rx
+-----------------------
+REXX
+    s  subroutines 
+
+============================
+
+
+detect by extensions: *.cmd *.rexx *.rx
+
+
+
+
+31. Ruby     *.rb *.ruby
+-----------------------
+Ruby
+    c  classes
+    f  methods
+    m  modules
+    F  singleton methods
+
+============================
+Ruby:
+  type: programming
+  ace_mode: ruby
+  color: "#701516"
+  aliases:
+  - jruby
+  - macruby
+  - rake
+  - rb
+  - rbx
+  extensions:
+  - .rb
+  - .builder
+  - .fcgi
+  - .gemspec
+  - .god
+  - .irbrc
+  - .jbuilder
+  - .mspec
+  - .pluginspec
+  - .podspec
+  - .rabl
+  - .rake
+  - .rbuild
+  - .rbw
+  - .rbx
+  - .ru
+  - .ruby
+  - .thor
+  - .watchr
+  interpreters:
+  - ruby
+  - macruby
+  - rake
+  - jruby
+  - rbx
+  filenames:
+  - .pryrc
+  - Appraisals
+  - Berksfile
+  - Brewfile
+  - Buildfile
+  - Deliverfile
+  - Fastfile
+  - Gemfile
+  - Gemfile.lock
+  - Guardfile
+  - Jarfile
+  - Mavenfile
+  - Podfile
+  - Puppetfile
+  - Snapfile
+  - Thorfile
+  - Vagrantfile
+  - buildfile
+
+
+RHTML:
+  type: markup
+  group: HTML
+  extensions:
+  - .rhtml
+  tm_scope: text.html.erb
+  aliases:
+  - html+ruby
+  ace_mode: rhtml
+
+
+Crystal:
+  type: programming
+  color: "#776791"
+  extensions:
+  - .cr
+  ace_mode: ruby
+  tm_scope: source.crystal
+  interpreters:
+  - crystal
+
+
+HCL:
+  type: programming
+  extensions:
+    - .hcl
+    - .tf
+  ace_mode: ruby
+tm_scope: source.ruby
+
+
+Mirah:
+  type: programming
+  search_term: mirah
+  color: "#c7a938"
+  extensions:
+  - .druby
+  - .duby
+  - .mir
+  - .mirah
+  tm_scope: source.ruby
+ace_mode: ruby
+
+
+1st detect by filenames:  .pryrc Appraisals Berksfile Brewfile Buildfile Deliverfile
+Fastfile Gemfile Gemfile.lock Guardfile Jarfile Mavenfile Podfile Puppetfile Snapfile
+Thorfile Vagrantfile buildfile
+
+2st detect by extensions: *.rb *.ruby .builder .gemspec .god .irbrc .jbuilder .mspec
+.pluginspec .podspec .rabl .rake .rbuild .rbw .rbx .ru .thor .watchr .rhtml .cr
+.hcl .tf .druby .duby .mir .mirah
+  
+
+
+32. Scheme   *.SCM *.SM *.sch *.scheme *.scm *.sm
+-----------------------
+Scheme
+    f  functions
+    s  sets
+
+============================
+Scheme:
+  type: programming
+  color: "#1e4aec"
+  extensions:
+  - .scm
+  - .sld
+  - .sls
+  - .sps
+  - .ss
+  interpreters:
+  - guile
+  - bigloo
+  - chicken
+ace_mode: scheme
+
+
+
+detect by extensions: *.SCM *.SM *.sch *.scheme *.scm *.sm .sld .sls .sps .ss
+
+
+
+33. Sh       *.sh *.SH *.bsh *.bash *.ksh *.zsh
+-----------------------
+Sh
+    f  functions
+
+============================
+Shell:
+  type: programming
+  search_term: bash
+  color: "#89e051"
+  aliases:
+  - sh
+  - bash
+  - zsh
+  extensions:
+  - .sh
+  - .bash
+  - .bats
+  - .cgi
+  - .command
+  - .fcgi
+  - .ksh
+  - .tmux
+  - .tool
+  - .zsh
+  interpreters:
+  - bash
+  - rc
+  - sh
+  - zsh
+  ace_mode: sh
+
+
+ShellSession:
+  type: programming
+  extensions:
+  - .sh-session
+  aliases:
+  - bash session
+  - console
+  tm_scope: text.shell-session
+  ace_mode: sh
+
+
+Tcsh:
+  type: programming
+  group: Shell
+  extensions:
+  - .tcsh
+  - .csh
+  tm_scope: source.shell
+ace_mode: sh
+
+
+
+detect by extensions: *.sh *.SH *.bsh *.bash *.ksh *.zsh .sh-session .tcsh .csh .bats .command .tmux .tool
+
+
+
+34. SLang    *.sl
+-----------------------
+SLang
+    f  functions 
+    n  namespaces 
+
+============================
+
+
+
+detect by extensions: *.sl
+
+
+
+35. SML      *.sml *.sig
+-----------------------
+SML
+    e  exception declarations
+    f  function definitions
+    c  functor definitions
+    s  signature declarations
+    r  structure declarations
+    t  type definitions
+    v  value bindings
+
+============================
+Standard ML:
+  type: programming
+  color: "#dc566d"
+  aliases:
+  - sml
+  extensions:
+  - .ML
+  - .fun
+  - .sig
+  - .sml
+  tm_scope: source.ml
+  ace_mode: text
+
+
+
+detect by extensions: .sml .sig .ML .fun
+
+
+
+36. SQL      *.sql
+-----------------------
+SQL
+    c  cursors
+    d  prototypes [off]
+    f  functions
+    F  record fields
+    l  local variables [off]
+    L  block label
+    P  packages
+    p  procedures
+    r  records [off]
+    s  subtypes
+    t  tables
+    T  triggers
+    v  variables
+    i  indexes
+    e  events
+    U  publications
+    R  services
+    D  domains
+    V  views
+    n  synonyms
+    x  MobiLink Table Scripts
+    y  MobiLink Conn Scripts
+    z  MobiLink Properties 
+
+============================
+SQL:
+  type: data
+  tm_scope: source.sql
+  ace_mode: sql
+  extensions:
+  - .sql
+  - .cql
+  - .ddl
+  - .inc
+  - .prc
+  - .tab
+  - .udf
+
+
+#IBM DB2
+SQLPL:
+  type: programming
+  ace_mode: sql
+  tm_scope: source.sql
+  extensions:
+  - .sql
+  - .db2
+
+
+#Oracle
+PLSQL:
+  type: programming
+  ace_mode: sql
+  tm_scope: source.plsql.oracle
+  color: "#dad8d8"
+  extensions:
+  - .pls
+  - .pck
+  - .pkb
+  - .pks
+  - .plb
+  - .plsql
+  - .sql
+
+
+#Postgres
+PLpgSQL:
+  type: programming
+  ace_mode: pgsql
+  tm_scope: source.sql
+  extensions:
+  - .sql
+
+
+
+detect by extensions: .sql .cql .ddl .prc .tab .udf .db2 .pls .pck .pkb .pks .plb .plsql
+
+
+37. Tcl      *.tcl *.tk *.wish *.itcl
+-----------------------
+Tcl
+    c  classes
+    m  methods
+    p  procedures
+
+============================
+Tcl:
+  type: programming
+  color: "#e4cc98"
+  extensions:
+  - .tcl
+  - .adp
+  - .tm
+  interpreters:
+  - tclsh
+  - wish
+ace_mode: tcl
+
+
+Glyph:
+  type: programming
+  color: "#e4cc98"
+  extensions:
+  - .glf
+  tm_scope: source.tcl
+ace_mode: tcl
+
+
+
+detect by extensions: *.tcl *.tk *.wish *.itcl .adp .tm .glf
+
+
+
+38. Tex      *.tex
+-----------------------
+Tex
+    c  chapters
+    s  sections
+    u  subsections
+    b  subsubsections
+    p  parts
+    P  paragraphs
+    G  subparagraphs
+    i  includes
+
+============================
+TeX:
+  type: markup
+  color: "#3D6117"
+  ace_mode: tex
+  wrap: true
+  aliases:
+  - latex
+  extensions:
+  - .tex
+  - .aux
+  - .bbx
+  - .bib
+  - .cbx
+  - .cls
+  - .dtx
+  - .ins
+  - .lbx
+  - .ltx
+  - .mkii
+  - .mkiv
+  - .mkvi
+  - .sty
+  - .toc
+
+
+
+detect by extensions: .tex .aux .bbx .bib .cbx .cls .dtx .ins .lbx .ltx .mkii .mkiv .mkvi .sty .toc
+
+
+
+39. Vera     *.vr *.vri *.vrh
+-----------------------
+Vera
+    c  classes
+    d  macro definitions
+    e  enumerators (values inside an enumeration)
+    f  function definitions
+    g  enumeration names
+    l  local variables [off]
+    m  class, struct, and union members
+    p  programs
+    P  function prototypes [off]
+    t  tasks
+    T  typedefs
+    v  variable definitions
+    x  external variable declarations [off]
+
+============================
+
+
+detect by extensions: *.vr *.vri *.vrh
+
+
+
+
+40. Verilog  *.v
+-----------------------
+Verilog
+    c  constants (define, parameter, specparam)
+    e  events
+    f  functions
+    m  modules
+    n  net data types
+    p  ports
+    r  register data types
+    t  tasks
+
+============================
+Verilog:
+  type: programming
+  color: "#b2b7f8"
+  extensions:
+  - .v
+  - .veo
+ace_mode: verilog
+
+SystemVerilog:
+  type: programming
+  color: "#DAE1C2"
+  extensions:
+  - .sv
+  - .svh
+  - .vh
+ace_mode: verilog
+
+
+
+detect by extensions: .v .veo .sv .svh .vh
+
+
+
+41. VHDL     *.vhdl *.vhd
+-----------------------
+VHDL
+    c  constant declarations
+    t  type definitions
+    T  subtype definitions
+    r  record names
+    e  entity declarations
+    C  component declarations [off]
+    d  prototypes [off]
+    f  function prototypes and declarations
+    p  procedure prototypes and declarations
+    P  package definitions
+    l  local definitions [off]
+
+============================
+
+VHDL:
+  type: programming
+  color: "#adb2cb"
+  extensions:
+  - .vhdl
+  - .vhd
+  - .vhf
+  - .vhi
+  - .vho
+  - .vhs
+  - .vht
+  - .vhw
+ace_mode: vhdl
+
+
+
+detect by extensions: *.vhdl *.vhd .vhf .vhi .vho .vhs .vht .vhw
+
+
+
+42. Vim      *.vim
+-----------------------
+Vim
+    a  autocommand groups
+    c  user-defined commands
+    f  function definitions
+    m  maps
+    v  variable definitions
+
+============================
+VimL:
+  type: programming
+  color: "#199f4b"
+  search_term: vim
+  aliases:
+  - vim
+  - nvim
+  extensions:
+  - .vim
+  filenames:
+  - .nvimrc
+  - .vimrc
+  - _vimrc
+  - gvimrc
+  - nvimrc
+  - vimrc
+ace_mode: text
+
+
+1st: detect by filenames: nvimrc .vimrc _vimrc gvimrc nvimrc vimrc
+2nd: detect by extensions: *.vim
+
+
+
+43. YACC     *.y
+-----------------------
+YACC
+    l  labels 
+============================
+Yacc:
+  type: programming
+  extensions:
+  - .y
+  - .yacc
+  - .yy
+  tm_scope: source.bison
+ace_mode: text
+
+
+Bison:
+  type: programming
+  group: Yacc
+  tm_scope: source.bison
+  extensions:
+  - .bison
+ace_mode: text
+
+
+
+detect by extensions: *.y *.bison
