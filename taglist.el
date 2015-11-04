@@ -213,6 +213,170 @@ for example *.hpp <--> *.cpp."
     ("vimrc-mode" "vim")
     ))
 
+(defvar taglist-language-to-ctags-alist
+  `(
+    ;; Ant language
+    ("ant" "Ant;p:projects;t:targets")
+
+    ;; assembly language
+    ("asm" "Asm;d:define;l:label;m:macro;t:type")
+
+    ;; aspperl language
+    ("aspperl" "Asp;c:constants;v:variable;f:function;s:subroutine")
+
+    ;; aspvbs language
+    ("aspvbs" "Asp;c:constants;v:variable;f:function;s:subroutine")
+
+    ;; awk language
+    ("awk"  "Awk;f:function")
+
+    ;; basic language
+    ("basic" "Basic;c:constant;l:label;g:enum;v:variable;t:type;f:function")
+
+    ;; beta language
+    ("beta" "BETA;f:fragment;s:slot;v:pattern")
+
+    ;; c language
+    ("c" "C;d:macro;g:enum;s:struct;u:union;t:typedef;\
+v:variable;f:function")
+
+    ;; c++ language
+    ("c++" "C++;n:namespace;v:variable;d:macro;t:typedef;\
+c:class;g:enum;s:struct;u:union;f:function")
+
+    ;; c# language
+    ("cs" "C#;d:macro;t:typedef;n:namespace;c:class;E:event;\
+g:enum;s:struct;i:interface;p:properties;m:method")
+
+    ;; cobol language
+    ("cobol" "Cobol;d:data;f:file;g:group;p:paragraph;\
+P:program;s:section")
+
+    ;; D programming language
+    ("d" "C++;n:namespace;v:variable;t:typedef;c:class;\
+g:enum;s:struct;u:union;f:function")
+
+    ;; Dosbatch
+    ("dosbatch" "DosBatch;l:labels;v:variables")
+
+    ;; eiffel language
+    ("eiffel" "Eiffel;c:class;f:feature")
+
+    ;; erlang language
+    ("erlang" "Erlang;d:macro;r:record;m:module;f:function")
+
+    ;; expect (same as tcl) language
+    ("expect" "Tcl;c:class;f:method;p:procedure")
+
+    ;; flex
+    ("flex" "Flex;v:global;c:classes;p:properties;m:methods;f:functions;x:mxtags")
+
+    ;; fortran language
+    ("Fortran" "fortran;p:program;b:block data;c:common;e:entry;\
+i:interface;k:type;l:label;m:module;n:namelist;t:derived;v:variable;\
+f:function;s:subroutine")
+
+    ;; GO language
+    ("go" "Go;f:function;p:package;t:struct")
+
+    ;; HTML language
+    ("html" "HTML;a:anchor;f:function")
+
+    ;; java language
+    ("java" "Java;p:package;c:class;i:interface;g:enum;f:field;m:method")
+
+    ;; javascript language
+    ("javascript" "JavaScript;c:class;m:method;v:global;f:function;p:properties")
+
+    ;; lisp language
+    ("lisp" "Lisp;f:function")
+
+    ;; lua language
+    ("lua" "Lua;f:function")
+
+    ;; makefiles
+    ("make" "Make;m:macro")
+
+    ;; Matlab
+    ("matlab" "MatLab;f:function")
+
+    ;; Ocamal
+    ("ocamal" "OCaml;M:module;v:global;t:type;c:class;\
+f:function;m:method;C:constructor;e:exception")
+
+    ;; pascal language
+    ("pascal" "Pascal;f:function;p:procedure")
+
+    ;; perl language
+    ("perl" "Perl;c:constant;l:label;p:package;s:subroutine")
+
+    ;; php language
+    ("php" "PHP;c:class;i:interface;d:constant;v:variable;f:function")
+
+    ;; python language
+    ("python" "Python;c:class;m:member;f:function")
+
+    ;; cython language
+    ("pyrex" "Python;c:classe;m:memder;f:function")
+
+    ;; rexx language
+    ("rexx" "REXX;s:subroutine")
+
+    ;; ruby language
+    ("ruby" "Ruby;c:class;f:method;F:function;m:singleton method")
+
+    ;; scheme language
+    ("Scheme" "scheme;s:set;f:function")
+
+    ;; shell language
+    ("sh" "Sh;f:function")
+
+    ;; C shell language
+    ("csh" "Sh;f:function")
+
+    ;; Z shell language
+    ("zsh" "Sh;f:function")
+
+    ;; slang language
+    ("slang" "SLang;n:namespace;f:function")
+
+    ;; sml language
+    ("sml" "SML;e:exception;c:functor;s:signature;r:structure;\
+t:type;v:value;c:functor;f:function")
+
+    ;; sql language
+    ("sql" "SQL;f:functions;P:packages;p:procedures;t:tables;T:triggers;\
+v:variables;e:events;U:publications;R:services;D:domains;x:MLTableScripts;\
+y:MLConnScripts;z:MLProperties;i:indexes;c:cursors;V:views;d:prototypes;\
+l:local variables;F:record fields;L:block label;r:records;s:subtypes")
+
+    ;; tcl language
+    ("tcl" "Tcl;c:class;f:method;m:method;p:procedure")
+
+    ;; Tex
+    ("tex" "Tex;c:chapters;s:sections;u:subsections;b:subsubsections;\
+p:parts;P:paragraphs;G:subparagraphs")
+
+    ;; vera language
+    ("vera" "Vera;c:class;d:macro;e:enumerator;f:function;g:enum;m:member;\
+p:program;P:prototype;t:task;T:typedef;v:variable;x:externvar")
+
+    ;; verilog language
+    ("verilog" "Verilog;m:module;c:constant;P:parameter;e:event;\
+r:register;t:task;w:write;p:port;v:variable;f:function")
+
+    ;; VHDL
+    ("vhdl" "VHDL;c:constant;t:type;T:subtype;r:record;e:entity;\
+f:function;p:procedure;P:package")
+
+    ;; vim language
+    ("vim" "Vim;v:variable;a:autocmds;c:commands;m:map;f:function")
+
+    ;; yacc language
+    ("yacc" "YACC;l:label")
+
+    ))
+
 (defun taglist-detect-language-by-major-mode ()
   "detect language by modeline"
   (let ((language nil)
