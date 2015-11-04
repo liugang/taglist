@@ -109,7 +109,6 @@
 Its format is list of (from . (to1 to2 to3...)) elements.  From and toN are
 strings which are extentions of the files.")
 
-;; 切换C/C++头文件
 ;;;###autoload
 (defun taglist-switch-h-cpp ()
   "Switch header and body file according to `taglist-header-switches' var.
@@ -135,31 +134,20 @@ for example *.hpp <--> *.cpp."
 ;; ================================== CPP-H switch end =========================
 
 ;; ================================== Tag navigator =========================
-;; 存储当前的tag
-(defvar taglist-current-tag nil
-  "Current Semantic tag in source buffer.")
 
-;; 这个buffer用于选择tags
-(defvar taglist-buffer nil
-  "Buffer used to selecting tags in Taglist.")
+(defvar taglist-source-code-buffer nil
+  "Source code buffer")
 
-;; 列
-(defvar taglist-names-column 2
-  "Column used when selecting tags in Taglist.")
-
-;; 当搜索的时候方法的集合
-(defvar taglist-tags nil
+(defvar taglist-all-tags nil
   "Collection of tags used when searching for current selection.")
 
-;; 实际的方法
 (defvar taglist-actual-tags nil
   "Collection of actual tags used when searching for current selection.")
 
-;; 当前的搜索字符串
 (defvar taglist-search-string nil
   "The current search string during a search.")
 
-;; overlays用于高亮搜索字符串.
+;; overlays, use hightlight tags
 (defvar taglist-overlays nil
   "List of active overlays.")
 
@@ -520,16 +508,13 @@ f:function;p:procedure;P:package")
     )
   )
 
-;; 返回当前buffer的所有tags, 一行是一个字符串
 (defun taglist-get-tag-lines ()
-  "return ctags output buffer;"
+  "return all tags;"
 
-  ;; (buffer-file-name) "c" "dgsutvf"
-
-  (let* ((detected-language (taglist-detect-language))   ;; 如果识别文件类型识别, 则提示用户输入文件类型.(识别文件类型是难点)
+  (let* ((detected-language (taglist-detect-language))
          (ctags-language (taglist-get-ctags-language detected-language))
-         (ctags-lang-kinds (taglist-get-kinds-by-language detected-language)) ;; 根据文件类型自动选择 tag 的类型(kinds)
-         (file (buffer-file-name taglist-buffer))) ;; 文件名
+         (ctags-lang-kinds (taglist-get-kinds-by-language detected-language))
+         (file (buffer-file-name taglist-source-code-buffer)))
     ;; (message "file = %s" file)
 
     (setq taglist-current-language detected-language)
@@ -567,14 +552,13 @@ f:function;p:procedure;P:package")
                               file
                               )))
          "\n" t)
-      (insert (concat "Warnning: " (buffer-name taglist-buffer) " doesn't exist on your disk, you should save it first!\n"))
+      (insert (concat "Warnning: " (buffer-name taglist-source-code-buffer) " doesn't exist on your disk, you should save it first!\n"))
       nil
       )
     )
   )
 
-;; 返回3个字符串的一个列表: 类型, 父亲, tag的名字
-;; tagline =  main      /home/galen_liu/.emacs.d/src/ip46.c     38;"    f       line:38
+;; e.g. tagline =  main      /path/to/src/ip46.c     38;"    f       line:38
 (defun taglist-convert-to-elements (tagline)
   "Return a list of three strings, representing type, parent and name of tag F."
   (let ((elements (split-string tagline "\t" t)))
@@ -582,22 +566,18 @@ f:function;p:procedure;P:package")
     )
   )
 
-
-;; 显示当前buffer的方法/函数列表
 ;;;###autoload
 (defun taglist-list-tags ()
   "Show tag list of current buffer in a newly created buffer.
 This function is recommended to be bound to some convinient hotkey."
   (interactive)
-  (setq taglist-buffer (current-buffer))
+  (setq taglist-source-code-buffer (current-buffer))
   (setq taglist-current-line (line-number-at-pos))
   (setq taglist-current-major-mode major-mode)
 
-  ;; (setq taglist-current-tag (semantic-current-tag))
   (switch-to-buffer (get-buffer-create (concat (buffer-name (current-buffer)) " tag list")) t)
   (taglist-mode))
 
-;; 跳转到指定方法
 (defun taglist-jump-to-tag ()
   "Jump to a tag, corresponding the current line in tag buffer.
 When called standing on a line of tag list, it closes the list
@@ -612,13 +592,10 @@ buffer and sets the point to a tag, corresponding the line."
 
     (if (and tag-record (taglist-line tag-record))
         (progn
-          ;; 关闭当前buffer
           (kill-buffer (current-buffer))
 
-          ;; 切换到源代码buffer
-          (switch-to-buffer taglist-buffer t)
+          (switch-to-buffer taglist-source-code-buffer t)
 
-          ;; 跳转到指定位置
           (goto-line (taglist-line tag-record))
 
           (recenter)
@@ -628,15 +605,14 @@ buffer and sets the point to a tag, corresponding the line."
     )
   )
 
-;; 如果string包含substring, 则返回true
 (defun taglist-matches-all (string substrings)
   "Return non-nil if STRING contain each of SUBSTRINGS as a substring."
   (reduce (lambda (prev part) (and prev (string-match part string))) substrings :initial-value t))
 
 (defstruct taglist
-  (tag)      ;; 名字, e.g. main
-  (line)     ;; tag的行号位置, e.g. 11
-  (type)     ;; tag的类型 比如: f
+  (tag)      ;; tag name, e.g. main
+  (line)     ;; line number of tag, e.g. 11
+  (type)     ;; type of the tag: e.g. f
   )
 
 
@@ -645,7 +621,8 @@ buffer and sets the point to a tag, corresponding the line."
 
   ;; (message "types = %s, taglines = %s" types taglines)
   (let ((tags-struct nil))
-    ;; 查找每一种类型
+
+    ;; loop for each tag type
     (dolist (tag-type types)
       (let* ((element (split-string tag-type ":" t))
              (type-abbr (car element))
@@ -655,14 +632,16 @@ buffer and sets the point to a tag, corresponding the line."
 
         ;; (message "%s %s" type-abbr type-name)
 
+        ;; loop for all taglines
         (dolist (tagline taglines)
           ;; tagline (main 38 f)
-          ;; 当找到该种类型的tag的时候
+          ;; when current tag type matched
           (when (string= type-abbr (nth 2 tagline))
-            ;; 如果是第一次找到, 输出全名称
-            (if type-occur
+
+            (if type-occur ;; when current tag is not first time appear.
                 ;; (message "%s" tagline)
                 (setq tags-struct (append tags-struct (list (make-taglist :tag (concat "  " (car tagline)) :line (nth 1 tagline) :type (nth 2 tagline)))))
+              ;; if current tag is first time appear, then display type name and current tag.
               (setq tags-struct (append tags-struct (list (make-taglist :tag type-name :line 0 :type ""))))
               (setq tags-struct (append tags-struct (list (make-taglist :tag (concat "  " (car tagline)) :line (nth 1 tagline) :type (nth 2 tagline)))))
               ;; (message "%s" type-name)
@@ -679,7 +658,6 @@ buffer and sets the point to a tag, corresponding the line."
     )
   )
 
-;; 根据搜索字符串更新方法/函数列表
 (defun taglist-search-string-updated ()
   "Update tag list according to search string."
 
@@ -690,12 +668,12 @@ buffer and sets the point to a tag, corresponding the line."
   (setq types (taglist-get-kinds-map-by-language taglist-current-language))
 
   (let ((taglist-actual-tags_tmp
-         ;; remove-if-not 把list中不满足条件的全部删除掉
+         ;; remove-if-not: Remove all items not satisfying search string.
          (remove-if-not
           (lambda (element)
             (taglist-matches-all (car element) (split-string taglist-search-string))
             )
-          taglist-tags)))
+          taglist-all-tags)))
 
     ;; ("DEBUG" 11 "d") ("main" 18 "f")
     (setq taglist-actual-tags (taglist-gen-display-struct types taglist-actual-tags_tmp))
@@ -710,12 +688,6 @@ buffer and sets the point to a tag, corresponding the line."
     (delete-overlay i))
 
   (setq taglist-overlays nil)
-
-  ;; (defstruct taglist
-  ;; (tag)      ;; 名字, e.g. main
-  ;; (line)     ;; tag的行号位置, e.g. 11
-  ;; (type)     ;; tag的类型 比如: f
-  ;; )
 
   ;; [cl-struct-taglist "main" 38 "f"]
   (dolist (tag-record taglist-actual-tags)
@@ -756,38 +728,31 @@ buffer and sets the point to a tag, corresponding the line."
     ) ;; let
   )
 
-
-;; 当key按下的时候调用
 (defun taglist-key-pressed (key)
   "Called when KEY is pressed."
   (setq taglist-search-string (concat taglist-search-string (char-to-string key)))
   (taglist-search-string-updated))
 
-;; 当退格键按下的时候调用.
 (defun taglist-backspace-pressed ()
   "Called when Backspace is pressed."
   (interactive)
   (setq taglist-search-string (taglist-string-without-last taglist-search-string 1))
   (taglist-search-string-updated))
 
-;; 根据key返回一个函数.
 (defun taglist-make-key-function (key)
   "Return a function for KEY."
   `(lambda () (interactive) (taglist-key-pressed ,key)))
 
-;; 映射key到它的函数
 (defun taglist-key-itself (map key)
   "Maps in the MAP KEY to its function."
   (define-key map (char-to-string key) (taglist-make-key-function key)))
 
-;; 退出方法列表buffer
 (defun taglist-escape ()
   "Kill tag list buffer."
   (interactive)
   (kill-buffer (current-buffer))
-  (switch-to-buffer taglist-buffer))
+  (switch-to-buffer taglist-source-code-buffer))
 
-;; 快捷键映射
 (defvar taglist-mode-map
   (let ((map (make-sparse-keymap)))
     (suppress-keymap map)
@@ -836,7 +801,6 @@ buffer and sets the point to a tag, corresponding the line."
       (expand-file-name name ctags-executable-directory)
     name))
 
-;; 运行外部程序, 输出为字符串.
 (defun ctags-process-string (program &rest args)
   (with-temp-buffer
     ;; (process-file PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)
@@ -853,9 +817,16 @@ buffer and sets the point to a tag, corresponding the line."
 
 (defun taglist-highlight-current-tag ()
   "Highlight current tag line"
-  ;; 高亮当前tag的行
-  ;; taglist-tags =  (("INET_ADDRSTRLEN" 17 "d") ("INET6_ADDRSTRLEN" 18 "d") ("ZERO" 19 "d") ("BUF_SIZE" 20 "d") ("global_var" 22 "v") ("IP4_2_6" 24 "f") ("IP6_2_4" 31 "f") ("main" 38 "f"))
-  ;; get current line number; and find range of line nubmer in taglist-tags
+  ;; taglist-all-tags =
+  ;; (("INET_ADDRSTRLEN" 17 "d")
+  ;;  ("INET6_ADDRSTRLEN" 18 "d")
+  ;;  ("ZERO" 19 "d")
+  ;;  ("BUF_SIZE" 20 "d")
+  ;;  ("global_var" 22 "v")
+  ;;  ("IP4_2_6" 24 "f")
+  ;;  ("IP6_2_4" 31 "f")
+  ;;  ("main" 38 "f"))
+  ;; get current line number; and find range of line nubmer in taglist-all-tags
   ;; Set current line corresponding to the current function/tag if any
   (let ((prev-line 0)
         (curr-line 0)
@@ -864,9 +835,9 @@ buffer and sets the point to a tag, corresponding the line."
 
     (while (and
             (= 0 tag-line)
-            (< i (length taglist-tags)))
+            (< i (length taglist-all-tags)))
 
-      (setq curr-line (nth 1 (elt taglist-tags i)))
+      (setq curr-line (nth 1 (elt taglist-all-tags i)))
       (setq i (1+ i))
 
       ;; (message "taglist-current-line = %d, prev-line = %d curr-line = %d, tag-line = %d"
@@ -876,17 +847,21 @@ buffer and sets the point to a tag, corresponding the line."
       ;;          tag-line)
 
       (if (= taglist-current-line curr-line)
-          ;; 最好的情况.
+          ;; best case
           (setq tag-line curr-line)
 
         (if (< taglist-current-line curr-line)
-            ;; 当前行小于当前tag的行号的情况, 则选择前一个tag的行号
+            ;; if current line in source code buffer less than the line number
+            ;; of current encounter tag in taglist, then choose the line number
+            ;; of previous tags.
             (if (= 0 prev-line)
-                ;; 如果前一个行号是0, 则选择当前的tag行号
+                ;; if line number of previous tag is zero, then choose the line
+                ;; number of current tag
                 (setq tag-line curr-line)
               (setq tag-line prev-line)
               )
-          ;; 当前行大于当前tag行号的情况, 继续循环, 直到当前行比当前tag的行号小.
+          ;; if current line in source code buffer is big than the line number
+          ;; of current encounter tag in taglist, then continue loop.
           )
         )
       ;; (message "tag-line = %d" tag-line)
@@ -1087,29 +1062,24 @@ f:function;p:procedure;P:package" language-hash-table)
 
 (defun taglist-mode-init ()
   "Initialize tag list mode."
-  ;; 当前的搜索字符串.
-  (make-local-variable 'taglist-search-string)   ;; current tag search string
-  ;; 所有方法的结构体列表.
-  (make-local-variable 'taglist-tags)         ;; list of taglist-tag structures
-  ;; 包含搜索字符串的所有方法的结构体列表.
-  (make-local-variable 'taglist-actual-tags)  ;; subset of taglist-tags that contain taglist-search string in the name string
-  ;; 方法名开始的列.
-  (make-local-variable 'taglist-names-column)    ;; this is the column where tag name fields starts
-  ;; overlays用于高亮搜索字符串.
-  (make-local-variable 'taglist-overlays)        ;; overlays used to highligh search string matches in tag names
 
+  ;; current tag search string
+  (make-local-variable 'taglist-search-string)
+  ;; list of taglist-tag structures
+  (make-local-variable 'taglist-all-tags)
+  ;; subset of taglist-all-tags that contain taglist-search string in the name string
+  (make-local-variable 'taglist-actual-tags)
+  ;; overlays used to highligh search string matches in tag names
+  (make-local-variable 'taglist-overlays)
   (make-local-variable 'taglist-current-language)
-  ;; (make-local-variable 'taglist-current-line)
-
   (make-local-variable 'taglist-language-hash-table)
-
-  (message "current-line = %d" taglist-current-line)
+  ;; (message "current-line = %d" taglist-current-line)
   (setq taglist-overlays nil)
   (setq taglist-search-string "")
 
   (setq taglist-language-hash-table (taglist-language-hash-table-init))
 
-  (setq taglist-tags
+  (setq taglist-all-tags
         (let* ((tag-lines (taglist-get-tag-lines)))
           (if tag-lines
               ;; (message "tag-lines = %s" tag-lines)
@@ -1118,17 +1088,15 @@ f:function;p:procedure;P:package" language-hash-table)
             )
           ))
 
-  ;; (message "taglist-tags %S" taglist-tags)
+  ;; (message "taglist-all-tags %S" taglist-all-tags)
 
-  (if (not taglist-tags)
+  (if (not taglist-all-tags)
       (insert "No taglist, Press ESC to exist!!!\n")
-    ;; 把结果更新到屏幕上.
     (taglist-search-string-updated)
     (taglist-highlight-current-tag)
     )
   )
 
-;; 定义mode
 (define-derived-mode taglist-mode nil "Taglist"
   "EmacsAssist tag selection mode.
    \\{taglist-mode-map}
