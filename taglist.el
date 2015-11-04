@@ -157,9 +157,6 @@ for example *.hpp <--> *.cpp."
 (defvar taglist-current-line nil
   "current line")
 
-(defvar taglist-language-hash-table nil
-  "taglist language hash table")
-
 (defvar taglist-current-major-mode nil
   "current major mode")
 
@@ -478,31 +475,50 @@ f:function;p:procedure;P:package")
     )
   )
 
-(defun taglist-get-kinds-map-by-language (language)
-  "get kinds by kinds"
+(defun taglist-get-ctags-language-config (language)
+  "get ctags language config"
+  (let ((language-config nil)
+        (i 0))
 
-  ;; (message "language = %s" language)
-  (let ((hash-value (gethash language taglist-language-hash-table))
-        (kinds nil))
-    ;; (cdr list)       2nd to last elements.
-    ;; "C;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function"
-    ;; (message "hash-value = %s" hash-value)
-    (setq kinds (cdr (split-string hash-value ";" t)))
-    ;; (message "kinds = %S" kinds)
-    kinds
+    (while (and
+            (not language-config)
+            (< i (length taglist-language-to-ctags-alist)))
+
+      (if (string= language (car (elt taglist-language-to-ctags-alist i)))
+          (setq language-config (nth 1 (elt taglist-language-to-ctags-alist i)))
+        )
+      (setq i (1+ i))
+      )
+    ;; (message "detect language-config by language = %s" language-config)
+    language-config
     )
   )
 
-(defun taglist-get-ctags-language (language)
+(defun taglist-get-kinds-map-by-language (language)
+  "get ctags language kinds by language"
+
+  ;; (message "language = %s" language)
+  (let ((ctags-language-config (taglist-get-ctags-language-config language))
+        (ctags-language-kinds nil))
+    ;; (cdr list)       2nd to last elements.
+    ;; "C;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function"
+    ;; (message "ctags-language-config = %s" ctags-language-config)
+    (setq ctags-language-kinds (cdr (split-string ctags-language-config ";" t)))
+    ;; (message "ctags-language-kinds = %S" ctags-language-kinds)
+    ctags-language-kinds
+    )
+  )
+
+(defun taglist-get-ctags-language-name (language)
   "get ctags-language by ctags-language"
 
   ;; (message "language = %s" language)
-  (let ((hash-value (gethash language taglist-language-hash-table))
+  (let ((ctags-language-config (taglist-get-ctags-language-config language))
         (ctags-language nil))
     ;; (cdr list)       2nd to last elements.
     ;; "C;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function"
-    ;; (message "hash-value = %s" hash-value)
-    (setq ctags-language (car (split-string hash-value ";" t)))
+    ;; (message "ctags-language-config = %s" ctags-language-config)
+    (setq ctags-language (car (split-string ctags-language-config ";" t)))
     ;; (message "ctags-language = %S" ctags-language)
     ctags-language
     )
@@ -512,7 +528,7 @@ f:function;p:procedure;P:package")
   "return all tags;"
 
   (let* ((detected-language (taglist-detect-language))
-         (ctags-language (taglist-get-ctags-language detected-language))
+         (ctags-language (taglist-get-ctags-language-name detected-language))
          (ctags-lang-kinds (taglist-get-kinds-by-language detected-language))
          (file (buffer-file-name taglist-source-code-buffer)))
     ;; (message "file = %s" file)
@@ -884,182 +900,6 @@ buffer and sets the point to a tag, corresponding the line."
   (hl-line-mode)
   )
 
-
-(defun taglist-language-hash-table-init()
-  "language hash table"
-  (let ((language-hash-table))
-
-    ;; create a hash table
-    (setq language-hash-table (make-hash-table :test 'equal))
-
-    ;; (detected language) -> (ctags language):(ctags language kinds)
-    ;; add entries
-
-    ;; Ant language
-    (puthash "Ant" "Ant;p:projects;t:targets" language-hash-table)
-
-    ;; assembly language
-    (puthash "asm" "Asm;d:define;l:label;m:macro;t:type" language-hash-table)
-
-    ;; aspperl language
-    (puthash "aspperl" "Asp;c:constants;v:variable;f:function;s:subroutine" language-hash-table)
-
-    ;; aspvbs language
-    (puthash "aspvbs" "Asp;c:constants;v:variable;f:function;s:subroutine" language-hash-table)
-
-    ;; awk language
-    (puthash "awk"  "Awk;f:function" language-hash-table)
-
-    ;; basic language
-    (puthash "basic" "Basic;c:constant;l:label;g:enum;v:variable;t:type;f:function" language-hash-table)
-
-    ;; beta language
-    (puthash "beta" "BETA;f:fragment;s:slot;v:pattern" language-hash-table)
-
-    ;; c language
-    (puthash "c" "C;d:macro;g:enum;s:struct;u:union;t:typedef;\
-v:variable;f:function" language-hash-table)
-
-    ;; c++ language
-    (puthash "c++" "C++;n:namespace;v:variable;d:macro;t:typedef;\
-c:class;g:enum;s:struct;u:union;f:function" language-hash-table)
-
-    ;; c# language
-    (puthash "cs" "C#;d:macro;t:typedef;n:namespace;c:class;E:event;\
-g:enum;s:struct;i:interface;p:properties;m:method" language-hash-table)
-
-    ;; cobol language
-    (puthash "cobol" "Cobol;d:data;f:file;g:group;p:paragraph;\
-P:program;s:section" language-hash-table)
-
-    ;; D programming language
-    (puthash "d" "C++;n:namespace;v:variable;t:typedef;c:class;\
-g:enum;s:struct;u:union;f:function" language-hash-table)
-
-    ;; Dosbatch
-    (puthash "dosbatch" "DosBatch;l:labels;v:variables" language-hash-table)
-
-    ;; eiffel language
-    (puthash "eiffel" "Eiffel;c:class;f:feature" language-hash-table)
-
-    ;; erlang language
-    (puthash "erlang" "Erlang;d:macro;r:record;m:module;f:function" language-hash-table)
-
-    ;; expect (same as tcl) language
-    (puthash "expect" "Tcl;c:class;f:method;p:procedure" language-hash-table)
-
-    ;; flex
-    (puthash "flex" "Flex;v:global;c:classes;p:properties;m:methods;f:functions;x:mxtags" language-hash-table)
-
-    ;; fortran language
-    (puthash "Fortran" "fortran;p:program;b:block data;c:common;e:entry;\
-i:interface;k:type;l:label;m:module;n:namelist;t:derived;v:variable;\
-f:function;s:subroutine" language-hash-table)
-
-    ;; GO language
-    (puthash "go" "Go;f:function;p:package;t:struct" language-hash-table)
-
-    ;; HTML language
-    (puthash "html" "HTML;a:anchor;f:function" language-hash-table)
-
-    ;; java language
-    (puthash "java" "Java;p:package;c:class;i:interface;g:enum;f:field;m:method" language-hash-table)
-
-    ;; javascript language
-    (puthash "javascript" "JavaScript;c:class;m:method;v:global;f:function;p:properties" language-hash-table)
-
-    ;; lisp language
-    (puthash "lisp" "Lisp;f:function" language-hash-table)
-
-    ;; lua language
-    (puthash "lua" "Lua;f:function" language-hash-table)
-
-    ;; makefiles
-    (puthash "make" "Make;m:macro" language-hash-table)
-
-    ;; Matlab
-    (puthash "matlab" "MatLab;f:function" language-hash-table)
-
-    ;; Ocamal
-    (puthash "ocamal" "OCaml;M:module;v:global;t:type;c:class;\
-f:function;m:method;C:constructor;e:exception" language-hash-table)
-
-    ;; pascal language
-    (puthash "pascal" "Pascal;f:function;p:procedure" language-hash-table)
-
-    ;; perl language
-    (puthash "perl" "Perl;c:constant;l:label;p:package;s:subroutine" language-hash-table)
-
-    ;; php language
-    (puthash "php" "PHP;c:class;i:interface;d:constant;v:variable;f:function" language-hash-table)
-
-    ;; python language
-    (puthash "python" "Python;c:class;m:member;f:function" language-hash-table)
-
-    ;; cython language
-    (puthash "pyrex" "Python;c:classe;m:memder;f:function" language-hash-table)
-
-    ;; rexx language
-    (puthash "rexx" "REXX;s:subroutine" language-hash-table)
-
-    ;; ruby language
-    (puthash "ruby" "Ruby;c:class;f:method;F:function;m:singleton method" language-hash-table)
-
-    ;; scheme language
-    (puthash "Scheme" "scheme;s:set;f:function" language-hash-table)
-
-    ;; shell language
-    (puthash "sh" "Sh;f:function" language-hash-table)
-
-    ;; C shell language
-    (puthash "csh" "Sh;f:function" language-hash-table)
-
-    ;; Z shell language
-    (puthash "zsh" "Sh;f:function" language-hash-table)
-
-    ;; slang language
-    (puthash "slang" "SLang;n:namespace;f:function" language-hash-table)
-
-    ;; sml language
-    (puthash "sml" "SML;e:exception;c:functor;s:signature;r:structure;\
-t:type;v:value;c:functor;f:function" language-hash-table)
-
-    ;; sql language
-    (puthash "sql" "SQL;f:functions;P:packages;p:procedures;t:tables;T:triggers;\
-v:variables;e:events;U:publications;R:services;D:domains;x:MLTableScripts;\
-y:MLConnScripts;z:MLProperties;i:indexes;c:cursors;V:views;d:prototypes;\
-l:local variables;F:record fields;L:block label;r:records;s:subtypes" language-hash-table)
-
-    ;; tcl language
-    (puthash "tcl" "Tcl;c:class;f:method;m:method;p:procedure" language-hash-table)
-
-    ;; Tex
-    (puthash "tex" "Tex;c:chapters;s:sections;u:subsections;b:subsubsections;\
-p:parts;P:paragraphs;G:subparagraphs" language-hash-table)
-
-    ;; vera language
-    (puthash "vera" "Vera;c:class;d:macro;e:enumerator;f:function;g:enum;m:member;\
-p:program;P:prototype;t:task;T:typedef;v:variable;x:externvar" language-hash-table)
-
-    ;; verilog language
-    (puthash "verilog" "Verilog;m:module;c:constant;P:parameter;e:event;\
-r:register;t:task;w:write;p:port;v:variable;f:function" language-hash-table)
-
-    ;; VHDL
-    (puthash "vhdl" "VHDL;c:constant;t:type;T:subtype;r:record;e:entity;\
-f:function;p:procedure;P:package" language-hash-table)
-
-    ;; vim language
-    (puthash "vim" "Vim;v:variable;a:autocmds;c:commands;m:map;f:function" language-hash-table)
-
-    ;; yacc language
-    (puthash "yacc" "YACC;l:label" language-hash-table)
-
-    language-hash-table
-    )
-
-  )
-
 (defun taglist-mode-init ()
   "Initialize tag list mode."
 
@@ -1072,12 +912,9 @@ f:function;p:procedure;P:package" language-hash-table)
   ;; overlays used to highligh search string matches in tag names
   (make-local-variable 'taglist-overlays)
   (make-local-variable 'taglist-current-language)
-  (make-local-variable 'taglist-language-hash-table)
   ;; (message "current-line = %d" taglist-current-line)
   (setq taglist-overlays nil)
   (setq taglist-search-string "")
-
-  (setq taglist-language-hash-table (taglist-language-hash-table-init))
 
   (setq taglist-all-tags
         (let* ((tag-lines (taglist-get-tag-lines)))
