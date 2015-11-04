@@ -85,7 +85,7 @@
 
 ;;; Code:
 
-(require 'cl)
+(require 'cl-lib)
 ;; ================================== My STRING utils ========================
 (defun taglist-string-without-last (string n)
   "This function truncates from the STRING last N characters."
@@ -274,7 +274,7 @@ f:function;s:subroutine")
     ("javascript" "JavaScript;c:class;m:method;v:global;f:function;p:properties")
 
     ;; lisp language
-    ("lisp" "Lisp;f:function")
+    ("lisp" "Lisp;v:variable;f:function")
 
     ;; lua language
     ("lua" "Lua;f:function")
@@ -361,6 +361,12 @@ f:function;p:procedure;P:package")
     ("yacc" "YACC;l:label")
 
     ))
+
+(defun taglist-goto-line (N)
+  "goto specified line <N>"
+  (goto-char (point-min))
+  (forward-line (1- N))
+  )
 
 (defun taglist-detect-language-by-major-mode ()
   "detect language by modeline"
@@ -536,7 +542,7 @@ f:function;p:procedure;P:package")
     (setq taglist-current-language detected-language)
     (if file
         (split-string
-         (apply #'ctags-process-string
+         (apply #'taglist-ctags-process-string
                 "ctags"
                 (append (list "-f" "-" ;; -f tagfile
                               "--format=2" ;; --format=level, Change the format of the
@@ -612,7 +618,7 @@ buffer and sets the point to a tag, corresponding the line."
 
           (switch-to-buffer taglist-source-code-buffer t)
 
-          (goto-line (taglist-line tag-record))
+          (taglist-goto-line (taglist-line tag-record))
 
           (recenter)
           )
@@ -713,6 +719,7 @@ buffer and sets the point to a tag, corresponding the line."
   (let ((offset 0)
         (pos 0)
         (line-pos nil)
+        (tag-record nil)
         (output (buffer-string))
         (search-strings (split-string taglist-search-string)))
     (dolist (search-string search-strings)
@@ -737,10 +744,10 @@ buffer and sets the point to a tag, corresponding the line."
           ))
       ) ;; dolist
     ;; (if (not line-pos)
-    ;;     (goto-line (+ 1 (/ (count-lines (point-min) (point-max)) 2))))
+    ;;     (taglist-goto-line (+ 1 (/ (count-lines (point-min) (point-max)) 2))))
     (if line-pos
-        (goto-line line-pos)
-      (goto-line (+ 1 (/ (count-lines (point-min) (point-max)) 2))))
+        (taglist-goto-line line-pos)
+      (taglist-goto-line (+ 1 (/ (count-lines (point-min) (point-max)) 2))))
     ) ;; let
   )
 
@@ -810,19 +817,19 @@ buffer and sets the point to a tag, corresponding the line."
   :risky t
   :group 'ctags)
 
-(defun ctags-program-path (name)
+(defun taglist-ctags-program-path (name)
   (if ctags-executable-directory
       ;; (expand-file-name NAME &optional DEFAULT-DIRECTORY)
       ;; Convert filename NAME to absolute, and canonicalize it.
       (expand-file-name name ctags-executable-directory)
     name))
 
-(defun ctags-process-string (program &rest args)
+(defun taglist-ctags-process-string (program &rest args)
   (with-temp-buffer
     ;; (process-file PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)
     ;; Process files synchronously in a separate process.
     (let ((exit (apply #'process-file
-                       (ctags-program-path program) nil t nil args))
+                       (taglist-ctags-program-path program) nil t nil args))
           (output (progn
                     (goto-char (point-max))
                     (skip-chars-backward " \t\n")
@@ -894,7 +901,7 @@ buffer and sets the point to a tag, corresponding the line."
                  (lambda (item) (= tag-line (taglist-line item)))
                  taglist-actual-tags)))
       (when line
-        (goto-line (1+ line))))
+        (taglist-goto-line (1+ line))))
     )
 
   (hl-line-mode)
@@ -946,3 +953,15 @@ buffer and sets the point to a tag, corresponding the line."
 (provide 'taglist)
 
 ;;; taglist.el ends here
+
+;; taglist.el:122:70:Warning: function `find-if' from cl package called at runtime
+;; taglist.el:632:96:Warning: function `reduce' from cl package called at runtime
+;; taglist.el:698:11:Warning: function `remove-if-not' from cl package called at runtime
+;; taglist.el:902:18:Warning: function `position-if' from cl package called at runtime
+
+;; [PATCH] emacs: Suppress warnings about using cl at runtime
+;; https://notmuchmail.org/pipermail/notmuch/2012/010297.html
+
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions)
+;; End:
