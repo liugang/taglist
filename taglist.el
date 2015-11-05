@@ -85,7 +85,7 @@
 
 ;;; Code:
 
-(require 'cl-lib)
+(require 'cl)
 ;; ================================== My STRING utils ========================
 (defun taglist-string-without-last (string n)
   "This function truncates from the STRING last N characters."
