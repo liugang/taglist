@@ -805,9 +805,12 @@ buffer and sets the point to a tag, corresponding the line."
 
     (define-key map (kbd "<RET>") 'taglist-jump-to-tag)
     (define-key map (kbd "<backspace>") 'taglist-backspace-pressed)
-    (define-key map (kbd "<ESC>") 'taglist-escape)
-    ;; (define-key map (kbd "M-v") 'scroll-up)
-    ;; (define-key map (kbd "C-v") 'scroll-down)
+    ;; Cause M-v doesn't work!!!
+    ;; (define-key map (kbd "<ESC>") 'taglist-escape)
+    (define-key map (kbd "C-q") 'taglist-escape)
+    (define-key map (kbd "M-q") 'taglist-escape)
+    (define-key map "\C-v" 'scroll-up)
+    (define-key map "\M-v" 'scroll-down)
     map)
   "Keymap for `taglist-mode'.")
 
@@ -935,7 +938,7 @@ buffer and sets the point to a tag, corresponding the line."
   ;; (message "taglist-all-tags %S" taglist-all-tags)
 
   (if (not taglist-all-tags)
-      (insert "No taglist, Press ESC to exist!!!\n")
+      (insert "No taglist, Press <C-q> or <M-q> to exist!!!\n")
     (taglist-search-string-updated)
     (taglist-highlight-current-tag)
     )
