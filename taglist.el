@@ -160,6 +160,22 @@ for example *.hpp <--> *.cpp."
 (defvar taglist-current-major-mode nil
   "current major mode")
 
+(defface taglist-tag-type-face
+  '((t :inherit font-lock-function-name-face :height 1.2))
+  "Face for highlighting tag's type.")
+
+(defvar taglist-tag-type-face 'taglist-tag-type-face)
+
+(defconst taglist-font-lock-keywords-1
+  (list
+   '("^[^ ]*$" . taglist-tag-type-face)
+   )
+  "Minimal highlighting expressions for taglist mode")
+
+(defvar taglist-font-lock-keywords taglist-font-lock-keywords-1
+  "Default highlighting expressions for taglist mode")
+
+
 ;; major mode name map to language
 ;; (add-to-list 'taglist-major-to-language-alist '("<lang>-mode" "<lang>"))
 
@@ -922,6 +938,7 @@ buffer and sets the point to a tag, corresponding the line."
   ;; overlays used to highligh search string matches in tag names
   (make-local-variable 'taglist-overlays)
   (make-local-variable 'taglist-current-language)
+  (set (make-local-variable 'font-lock-defaults) '(taglist-font-lock-keywords))
   ;; (message "current-line = %d" taglist-current-line)
   (setq taglist-overlays nil)
   (setq taglist-search-string "")
