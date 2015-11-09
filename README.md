@@ -1,11 +1,8 @@
 # Emacs Taglist Mode
 
-The taglist plugin is a source code browser plugin for Emacs and provides an
-overview of the structure of the programming language files
-
-The "Tag List" plugin is a source code browser plugin for Emacs and provides
-an overview of the structure of the programming language files and allows you
-to efficiently browse through source code files for different programming
+The Taglist plugin is a source code browser plugin for Emacs and provides an
+overview of the structure of the programming language files and allows you to
+efficiently browse through source code files for different programming
 languages.
 
 It contains some useful functions features for developers:
