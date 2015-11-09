@@ -379,8 +379,7 @@ f:function;p:procedure;P:package")
 (defun taglist-goto-line (N)
   "goto specified line <N>"
   (goto-char (point-min))
-  (forward-line (1- N))
-  )
+  (forward-line (1- N)))
 
 (defun taglist-detect-language-by-major-mode ()
   "detect language by modeline"
@@ -392,32 +391,24 @@ f:function;p:procedure;P:package")
             (< i (length taglist-major-to-language-alist)))
 
       (if (string= taglist-current-major-mode (car (elt taglist-major-to-language-alist i)))
-          (setq language (nth 1 (elt taglist-major-to-language-alist i)))
-        )
-      (setq i (1+ i))
-      )
+          (setq language (nth 1 (elt taglist-major-to-language-alist i))))
+      (setq i (1+ i)))
     ;; (message "detect language by major mode = %s" language)
-    language
-    )
-  )
+    language))
 
 ;; TODO
 (defun taglist-detect-language-by-modeline ()
   "detect language by modeline"
   (let ((language nil))
     (setq language nil)
-    language
-    )
-  )
+    language))
 
 ;; TODO
 (defun taglist-detect-language-by-shebang ()
   "detect language by shebang"
   (let ((language nil))
     (setq language nil)
-    language
-    )
-  )
+    language))
 
 (defun taglist-detect-language-by-filename ()
   "detect language by filename"
@@ -445,18 +436,14 @@ f:function;p:procedure;P:package")
 
     ;; Emacs Lisp: .el
     ;;  filename: .emacs .emacs.desktop
-    language
-    )
-  )
+    language))
 
 ;; TODO
 (defun taglist-detect-language-by-heuristics ()
   "detect language by heuristics"
   (let ((language nil))
     (setq language nil)
-    language
-    )
-  )
+    language))
 
 (defun taglist-detect-language ()
   "return programming language of the file"
@@ -464,38 +451,31 @@ f:function;p:procedure;P:package")
   (let ((language (taglist-detect-language-by-major-mode)))
 
     (if (not language)
-        (setq language (taglist-detect-language-by-shebang))
-      )
+        (setq language (taglist-detect-language-by-shebang)))
 
     (if (not language)
-        (setq language (taglist-detect-language-by-shebang))
-      )
+        (setq language (taglist-detect-language-by-shebang)))
 
     (if (not language)
-        (setq language (taglist-detect-language-by-filename))
-      )
+        (setq language (taglist-detect-language-by-filename)))
 
     (if (not language)
-        (setq language (taglist-detect-language-by-heuristics))
-      )
+        (setq language (taglist-detect-language-by-heuristics)))
 
     ;; (message "last language = %s" language)
-    language
-    )
-  )
+    language))
 
+(defsubst taglist-filter-unsupport-kinds (language kinds)
+  "Return the supported kinds of current version `ctags'."
+  (let ((buffer-string nil)
+        (ctags-config nil ))
+    (setq buffer-string (apply #'taglist-ctags-process-string
+                               "ctags" (append (list (concat "--list-kinds=" language)))))
 
-(defun taglist-get-kinds-by-language (language)
-  "get kinds by kinds"
-  (let ((kinds ""))
-    (dolist (element (taglist-get-kinds-map-by-language language))
-      (setq kinds (concat kinds (substring element 0 1)))
-      )
-    kinds
-    )
-  )
+    (setq ctags-config (cdr (split-string kinds ";" t)))
+    kinds))
 
-(defun taglist-get-ctags-language-config (language)
+(defun taglist-get-ctags-language-config (detected-language)
   "get ctags language config"
   (let ((language-config nil)
         (i 0))
@@ -504,119 +484,76 @@ f:function;p:procedure;P:package")
             (not language-config)
             (< i (length taglist-language-to-ctags-alist)))
 
-      (if (string= language (car (elt taglist-language-to-ctags-alist i)))
-          (setq language-config (nth 1 (elt taglist-language-to-ctags-alist i)))
-        )
-      (setq i (1+ i))
-      )
-    ;; (message "detect language-config by language = %s" language-config)
-    language-config
-    )
-  )
+      (if (string= detected-language (car (elt taglist-language-to-ctags-alist i)))
+          (progn
+            (setq language-config (taglist-filter-unsupport-kinds
+                                   detected-language
+                                   (nth 1 (elt taglist-language-to-ctags-alist i))))))
+      (setq i (1+ i)))
+    ;; (message "detect language-config by detected-language = %s" language-config)
+    language-config))
 
-(defun taglist-get-kinds-map-by-language (language)
-  "get ctags language kinds by language"
-
-  ;; (message "language = %s" language)
-  (let ((ctags-language-config (taglist-get-ctags-language-config language))
-        (ctags-language-kinds nil))
-    ;; (cdr list)       2nd to last elements.
-    ;; "C;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function"
-    ;; (message "ctags-language-config = %s" ctags-language-config)
-    (setq ctags-language-kinds (cdr (split-string ctags-language-config ";" t)))
-    ;; (message "ctags-language-kinds = %S" ctags-language-kinds)
-    ctags-language-kinds
-    )
-  )
-
-(defun taglist-get-ctags-language-name (language)
-  "get ctags-language by ctags-language"
-
-  ;; (message "language = %s" language)
-  (let ((ctags-language-config (taglist-get-ctags-language-config language))
+(defun taglist-get-ctags-language-name (detected-language)
+  "get ctags-language by detected-language e.g.
+   \"C;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function\"
+   return \"C\""
+  (let ((ctags-language-config (taglist-get-ctags-language-config detected-language))
         (ctags-language nil))
-    ;; (cdr list)       2nd to last elements.
-    ;; "C;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function"
-    ;; (message "ctags-language-config = %s" ctags-language-config)
+
     (setq ctags-language (car (split-string ctags-language-config ";" t)))
-    ;; (message "ctags-language = %S" ctags-language)
-    ctags-language
-    )
-  )
+    ctags-language))
+
+(defun taglist-get-ctags-language-full-kinds (detected-language)
+  "Get full ctags language kinds by detected-language. e.g.
+  \"C;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function\"
+  return a list (\"d:macro\" \"g:enum\" \"s:struct\" \"u:union\"
+  \"t:typedef\" \"v:variable\" \"f:function\")"
+  (let ((ctags-language-config (taglist-get-ctags-language-config detected-language))
+        (ctags-language-kinds nil))
+    (setq ctags-language-kinds (cdr (split-string ctags-language-config ";" t)))
+    ctags-language-kinds))
+
+(defun taglist-get-ctags-language-short-kinds (detected-language)
+  "get kinds by detected-language.
+   e.g.
+   \"C;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function\"
+   return \"dgsutvf\""
+  (let ((kinds ""))
+    (dolist (element (taglist-get-ctags-language-full-kinds detected-language))
+      (setq kinds (concat kinds (substring element 0 1))))
+    kinds))
 
 (defun taglist-get-tag-lines ()
-  "return all tags;"
+  "Return all tags of current buffer;"
 
   (let* ((detected-language (taglist-detect-language))
          (ctags-language (taglist-get-ctags-language-name detected-language))
-         (ctags-lang-kinds (taglist-get-kinds-by-language detected-language))
+         (ctags-lang-kinds (taglist-get-ctags-language-short-kinds detected-language))
          (file (buffer-file-name taglist-source-code-buffer)))
-    ;; (message "file = %s" file)
 
     (setq taglist-current-language detected-language)
     (if file
         (split-string
          (apply #'taglist-ctags-process-string
                 "ctags"
-                (append (list "-f" "-" ;; -f tagfile
-                              "--format=2" ;; --format=level, Change the format of the
-                              ;; output tag file.(1,2)
-                              "--excmd=number" ;; --excmd=type, type are: number,
-                              ;; pattern, mixed
-                              "--fields=nks"   ;; --fields=[+|-]flags, n: Line number
-                              ;; of tag definition; k: Kind of tag as
-                              ;; a single letter [enabled]; s: Scope
-                              ;; of tag definition [enabled]
-                              "--sort=no" ;; --sort[=yes|no|foldcase] Indicates
-                              ;; whether the tag file should be sorted on
-                              ;; the tag name (default is yes)
-                              (concat "--language-force=" ctags-language) ;; --language-force=language;
-                              ;; forces the
-                              ;; specified
-                              ;; language
-                              (concat "--" ctags-language "-kinds=" ctags-lang-kinds) ;; --<LANG>-kinds=[+|-]kinds;
-                              ;; Specifies a
-                              ;; list of
-                              ;; language-specific
-                              ;; kinds of tags
-                              ;; (or kinds) to
-                              ;; include in the
-                              ;; output file
-                              ;; for a
-                              ;; particular
-                              ;; language
+                (append (list "-f" "-"
+                              "--format=2"
+                              "--excmd=number"
+                              "--fields=nks"
+                              "--sort=no"
+                              (concat "--language-force=" ctags-language)
+                              (concat "--" ctags-language "-kinds=" ctags-lang-kinds)
                               file
                               )))
          "\n" t)
       (insert (concat "Warnning: " (buffer-name taglist-source-code-buffer) " doesn't exist on your disk, you should save it first!\n"))
-      nil
-      )
-    )
-  )
+      nil)))
 
 ;; e.g. tagline =  main      /path/to/src/ip46.c     38;"    f       line:38
 (defun taglist-convert-to-elements (tagline)
-  "Return a list of three strings, representing type, parent and name of tag F."
+  "Convert tagline to a tag(tag-name tag-line tag-type) "
   (let ((elements (split-string tagline "\t" t)))
-    (list (car elements) (string-to-number (nth 2 elements)) (nth 3 elements))
-    )
-  )
-
-;;;###autoload
-(defun taglist-list-tags ()
-  "Show tag list of current buffer in a newly created buffer.
-This function is recommended to be bound to some convinient hotkey."
-  (interactive)
-  ;; (message "taglist-ctags-variant = %s" (taglist-ctags-variant))
-  (if (string= (taglist-ctags-variant) "emacs-ctags")
-      (error "taglist doesn't support emacs ctags, please install universal-ctags or exuberant-ctags!")
-    )
-  (setq taglist-source-code-buffer (current-buffer))
-  (setq taglist-current-line (line-number-at-pos))
-  (setq taglist-current-major-mode major-mode)
-
-  (switch-to-buffer (get-buffer-create (concat (buffer-name (current-buffer)) " tag list")) t)
-  (taglist-mode))
+    (list (car elements) (string-to-number (nth 2 elements)) (nth 3 elements))))
 
 (defun taglist-jump-to-tag ()
   "Jump to a tag, corresponding the current line in tag buffer.
@@ -627,8 +564,7 @@ buffer and sets the point to a tag, corresponding the line."
   (let ((tag-record (nth (1- (line-number-at-pos)) taglist-actual-tags)))
 
     (if (and tag-record (= 0 (taglist-line tag-record)))
-        (setq tag-record (nth (line-number-at-pos) taglist-actual-tags) )
-      )
+        (setq tag-record (nth (line-number-at-pos) taglist-actual-tags)))
 
     (if (and tag-record (taglist-line tag-record))
         (progn
@@ -638,12 +574,8 @@ buffer and sets the point to a tag, corresponding the line."
 
           (taglist-goto-line (taglist-line tag-record))
 
-          (recenter)
-          )
-      (message "The line does not contain tag description!")
-      )
-    )
-  )
+          (recenter))
+      (message "The line does not contain tag description!"))))
 
 (defun taglist-matches-all (string substrings)
   "Return non-nil if STRING contain each of SUBSTRINGS as a substring."
@@ -654,7 +586,6 @@ buffer and sets the point to a tag, corresponding the line."
   (line)     ;; line number of tag, e.g. 11
   (type)     ;; type of the tag: e.g. f
   )
-
 
 (defun taglist-gen-display-struct (types taglines)
   "Return a list of three strings, representing type, parent and name of tag F."
@@ -686,16 +617,10 @@ buffer and sets the point to a tag, corresponding the line."
               (setq tags-struct (append tags-struct (list (make-taglist :tag (concat "  " (car tagline)) :line (nth 1 tagline) :type (nth 2 tagline)))))
               ;; (message "%s" type-name)
               ;; (message "%s" tagline)
-              (setq type-occur t)
-              )
-            )
-          ) ;; 2nd dolist
-        )
-      ) ;; 1th dolist
+              (setq type-occur t))))))
     ;; (message "tags-struct = %s" tags-struct)
     ;; return tags-struct
-    tags-struct
-    )
+    tags-struct)
   )
 
 (defun taglist-search-string-updated ()
@@ -705,19 +630,17 @@ buffer and sets the point to a tag, corresponding the line."
 
   ;; let s:tlist_def_c_settings = 'c;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function'
   ;; (setq types (list "d:Macro" "g:Enum" "s:Struct" "u:Union" "t:Typedef" "v:Variable" "f:Function"))
-  (setq types (taglist-get-kinds-map-by-language taglist-current-language))
+  (setq types (taglist-get-ctags-language-full-kinds taglist-current-language))
 
   (let ((taglist-actual-tags_tmp
          ;; remove-if-not: Remove all items not satisfying search string.
          (remove-if-not
           (lambda (element)
-            (taglist-matches-all (car element) (split-string taglist-search-string))
-            )
+            (taglist-matches-all (car element) (split-string taglist-search-string)))
           taglist-all-tags)))
 
     ;; ("DEBUG" 11 "d") ("main" 18 "f")
-    (setq taglist-actual-tags (taglist-gen-display-struct types taglist-actual-tags_tmp))
-    )
+    (setq taglist-actual-tags (taglist-gen-display-struct types taglist-actual-tags_tmp)))
 
   ;; (message "taglist-actual-tags = %S" taglist-actual-tags)
 
@@ -731,8 +654,7 @@ buffer and sets the point to a tag, corresponding the line."
 
   ;; [cl-struct-taglist "main" 38 "f"]
   (dolist (tag-record taglist-actual-tags)
-    (insert (concat (taglist-tag tag-record) "\n"))
-    )
+    (insert (concat (taglist-tag tag-record) "\n")))
 
   (let ((offset 0)
         (pos 0)
@@ -741,16 +663,12 @@ buffer and sets the point to a tag, corresponding the line."
         (output (buffer-string))
         (search-strings (split-string taglist-search-string)))
     (dolist (search-string search-strings)
-      ;; (message "output = %s" output)
-
       (while (string-match search-string output offset)
         (progn
 
           (setq pos (match-beginning 0))
           (setq offset (match-end 0))
-          ;; (message "pos = %d, offset = %d" pos offset)
           ;; match: start form 0, overlay: start from 1;
-
           (setq tag-record (nth (1- (line-number-at-pos pos)) taglist-actual-tags))
           (if (not (= 0 (taglist-line tag-record)))
               (progn
@@ -758,15 +676,11 @@ buffer and sets the point to a tag, corresponding the line."
                 (overlay-put (car taglist-overlays) 'face '(background-color . "yellow"))
                 (if (not line-pos)
                     (setq line-pos (line-number-at-pos pos)))
-                ))
-          ))
-      ) ;; dolist
-    ;; (if (not line-pos)
-    ;;     (taglist-goto-line (+ 1 (/ (count-lines (point-min) (point-max)) 2))))
+                )))))
+
     (if line-pos
         (taglist-goto-line line-pos)
-      (taglist-goto-line (+ 1 (/ (count-lines (point-min) (point-max)) 2))))
-    ) ;; let
+      (taglist-goto-line (+ 1 (/ (count-lines (point-min) (point-max)) 2)))))
   )
 
 (defun taglist-key-pressed (key)
@@ -884,8 +798,7 @@ buffer and sets the point to a tag, corresponding the line."
   (let ((buffer-string nil)
         (ctags-variant nil ))
     (setq buffer-string (apply #'taglist-ctags-process-string
-                               "ctags" (append (list "--version"))
-                               ))
+                               "ctags" (append (list "--version"))))
 
     (if (string-match "Emacs" buffer-string 0)
         (setq ctags-variant "emacs-ctags")
@@ -893,9 +806,7 @@ buffer and sets the point to a tag, corresponding the line."
           (setq ctags-variant "universal-ctags")
         (if (string-match "Exuberant" buffer-string 0)
             (setq ctags-variant "exuberant-ctags"))))
-    ctags-variant
-    )
-  )
+    ctags-variant))
 
 
 (defun taglist-highlight-current-tag ()
@@ -945,12 +856,10 @@ buffer and sets the point to a tag, corresponding the line."
               )
           ;; if current line in source code buffer is big than the line number
           ;; of current encounter tag in taglist, then continue loop.
-          )
-        )
+          ))
       ;; (message "tag-line = %d" tag-line)
 
-      (setq prev-line curr-line)
-      )
+      (setq prev-line curr-line))
 
     (if (= 0 tag-line)
         (setq tag-line prev-line))
@@ -961,11 +870,26 @@ buffer and sets the point to a tag, corresponding the line."
                  (lambda (item) (= tag-line (taglist-line item)))
                  taglist-actual-tags)))
       (when line
-        (taglist-goto-line (1+ line))))
-    )
+        (taglist-goto-line (1+ line)))))
 
-  (hl-line-mode)
-  )
+  (hl-line-mode))
+
+;;;###autoload
+(defun taglist-list-tags ()
+  "Show tag list of current buffer in a newly created buffer.
+This function is recommended to be bound to some convinient hotkey."
+  (interactive)
+  ;; (message "taglist-ctags-variant = %s" (taglist-ctags-variant))
+  (if (string= (taglist-ctags-variant) "emacs-ctags")
+      (error "taglist doesn't support emacs ctags, please install universal-ctags or exuberant-ctags!")
+    )
+  (setq taglist-source-code-buffer (current-buffer))
+  (setq taglist-current-line (line-number-at-pos))
+  (setq taglist-current-major-mode major-mode)
+
+  (switch-to-buffer (get-buffer-create (concat (buffer-name (current-buffer)) " tag list")) t)
+  (taglist-mode))
+
 
 (defun taglist-mode-init ()
   "Initialize tag list mode."
@@ -987,20 +911,12 @@ buffer and sets the point to a tag, corresponding the line."
   (setq taglist-all-tags
         (let* ((tag-lines (taglist-get-tag-lines)))
           (if tag-lines
-              ;; (message "tag-lines = %s" tag-lines)
-              (mapcar 'taglist-convert-to-elements tag-lines)
-            ;; (message "tag-lines is nil")
-            )
-          ))
-
-  ;; (message "taglist-all-tags %S" taglist-all-tags)
+              (mapcar 'taglist-convert-to-elements tag-lines))))
 
   (if (not taglist-all-tags)
       (insert "No taglist, Press <C-q> or <M-q> to exist!!!\n")
     (taglist-search-string-updated)
-    (taglist-highlight-current-tag)
-    )
-  )
+    (taglist-highlight-current-tag)))
 
 (define-derived-mode taglist-mode nil "Taglist"
   "EmacsAssist tag selection mode.
