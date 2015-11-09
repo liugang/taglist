@@ -473,6 +473,8 @@ f:function;p:procedure;P:package")
                                "ctags" (append (list (concat "--list-kinds=" language)))))
 
     (setq ctags-config (cdr (split-string kinds ";" t)))
+    ;;(message "ctags-config = %s" ctags-config)
+    ;;(message "buffer-string = %s" buffer-string)
     kinds))
 
 (defun taglist-get-ctags-language-config (detected-language)
@@ -490,7 +492,8 @@ f:function;p:procedure;P:package")
                                    detected-language
                                    (nth 1 (elt taglist-language-to-ctags-alist i))))))
       (setq i (1+ i)))
-    ;; (message "detect language-config by detected-language = %s" language-config)
+    (if (not language-config)
+        (error "Unsupported language: %s" detected-language))
     language-config))
 
 (defun taglist-get-ctags-language-name (detected-language)
