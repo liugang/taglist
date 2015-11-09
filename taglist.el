@@ -83,7 +83,33 @@
 
 ;; 03 Nov 2015 -- v1.0 Initial version created.
 
+
+;;; TODO: taglist doesn't support ctags of emacs, we should ignore it.
+;; Universal Ctags support more language than Universal Ctags.
+
+;; /usr/local/bin/ctags --version
+;; Universal Ctags Development(ebe7328), Copyright (C) 2015 Universal Ctags Team
+;; Universal Ctags is derived from Exuberant Ctags.
+;; Exuberant Ctags 5.8, Copyright (C) 1996-2009 Darren Hiebert
+;;   Compiled: Nov  9 2015, 15:37:41
+;;   URL: https://ctags.io/
+;;   Optional compiled features: +wildcards, +regex, +debug, +option-directory, +coproc
+
+;; ctags-exuberant --version
+;; ctags-exuberant: Warning: Ignoring non-option in ./.ctags
+
+;; Exuberant Ctags 5.9~svn20110310, Copyright (C) 1996-2009 Darren Hiebert
+;;   Addresses: <dhiebert@users.sourceforge.net>, http://ctags.sourceforge.net
+;;   Optional compiled features: +wildcards, +regex
+
+;; ctags.emacs24 --version
+;; ctags (GNU Emacs 24.5)
+;; Copyright (C) 2015 Free Software Foundation, Inc.
+;; This program is distributed under the terms in ETAGS.README
+
 ;;; Code:
+
+
 
 (require 'cl)
 ;; ================================== My STRING utils ========================
