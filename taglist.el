@@ -290,7 +290,7 @@ f:function;s:subroutine")
     ("javascript" "JavaScript;c:class;m:method;v:global;f:function;p:properties")
 
     ;; lisp language
-    ("lisp" "Lisp;v:variable;f:function")
+    ("lisp" "Lisp;f:function")
 
     ;; lua language
     ("lua" "Lua;f:function")
