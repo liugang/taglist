@@ -84,28 +84,7 @@
 ;; 03 Nov 2015 -- v1.0 Initial version created.
 
 
-;;; TODO: taglist doesn't support ctags of emacs, we should ignore it.
-;; Universal Ctags support more language than Universal Ctags.
-
-;; /usr/local/bin/ctags --version
-;; Universal Ctags Development(ebe7328), Copyright (C) 2015 Universal Ctags Team
-;; Universal Ctags is derived from Exuberant Ctags.
-;; Exuberant Ctags 5.8, Copyright (C) 1996-2009 Darren Hiebert
-;;   Compiled: Nov  9 2015, 15:37:41
-;;   URL: https://ctags.io/
-;;   Optional compiled features: +wildcards, +regex, +debug, +option-directory, +coproc
-
-;; ctags-exuberant --version
-;; ctags-exuberant: Warning: Ignoring non-option in ./.ctags
-
-;; Exuberant Ctags 5.9~svn20110310, Copyright (C) 1996-2009 Darren Hiebert
-;;   Addresses: <dhiebert@users.sourceforge.net>, http://ctags.sourceforge.net
-;;   Optional compiled features: +wildcards, +regex
-
-;; ctags.emacs24 --version
-;; ctags (GNU Emacs 24.5)
-;; Copyright (C) 2015 Free Software Foundation, Inc.
-;; This program is distributed under the terms in ETAGS.README
+;;; TODO:
 
 ;;; Code:
 
@@ -635,6 +614,10 @@ f:function;p:procedure;P:package")
   "Show tag list of current buffer in a newly created buffer.
 This function is recommended to be bound to some convinient hotkey."
   (interactive)
+  ;; (message "taglist-ctags-variant = %s" (taglist-ctags-variant))
+  (if (string= (taglist-ctags-variant) "emacs-ctags")
+      (error "taglist doesn't support emacs ctags, please install universal-ctags or exuberant-ctags!")
+    )
   (setq taglist-source-code-buffer (current-buffer))
   (setq taglist-current-line (line-number-at-pos))
   (setq taglist-current-major-mode major-mode)
@@ -882,6 +865,45 @@ buffer and sets the point to a tag, corresponding the line."
       (or (zerop exit)
           (error "`%s' non-zero exit: %s" program output))
       output)))
+
+;; /usr/local/bin/ctags --version
+;; Universal Ctags Development(ebe7328), Copyright (C) 2015 Universal Ctags Team
+;; Universal Ctags is derived from Exuberant Ctags.
+;; Exuberant Ctags 5.8, Copyright (C) 1996-2009 Darren Hiebert
+;;   Compiled: Nov  9 2015, 15:37:41
+;;   URL: https://ctags.io/
+;;   Optional compiled features: +wildcards, +regex, +debug, +option-directory, +coproc
+
+;; ctags-exuberant --version
+;; ctags-exuberant: Warning: Ignoring non-option in ./.ctags
+
+;; Exuberant Ctags 5.9~svn20110310, Copyright (C) 1996-2009 Darren Hiebert
+;;   Addresses: <dhiebert@users.sourceforge.net>, http://ctags.sourceforge.net
+;;   Optional compiled features: +wildcards, +regex
+
+;; ctags.emacs24 --version
+;; ctags (GNU Emacs 24.5)
+;; Copyright (C) 2015 Free Software Foundation, Inc.
+;; This program is distributed under the terms in ETAGS.README
+
+(defsubst taglist-ctags-variant ()
+  "Return the variant of `ctags'."
+  (let ((buffer-string nil)
+        (ctags-variant nil ))
+    (setq buffer-string (apply #'taglist-ctags-process-string
+                               "ctags" (append (list "--version"))
+                               ))
+
+    (if (string-match "Emacs" buffer-string 0)
+        (setq ctags-variant "emacs-ctags")
+      (if (string-match "Universal" buffer-string 0)
+          (setq ctags-variant "universal-ctags")
+        (if (string-match "Exuberant" buffer-string 0)
+            (setq ctags-variant "exuberant-ctags"))))
+    ctags-variant
+    )
+  )
+
 
 (defun taglist-highlight-current-tag ()
   "Highlight current tag line"
