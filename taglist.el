@@ -31,13 +31,7 @@
 ;; to efficiently browse through source code files for different programming
 ;; languages.
 
-;; Ctags support this 43 languages Ant Asm Asp Awk Basic BETA C C++ C# Cobol
-;; DosBatch Eiffel Erlang Flex Fortran Go HTML Java JavaScript Lisp Lua Make
-;; MatLab ObjectiveC OCaml Pascal Perl PHP Python REXX Ruby Scheme Sh SLang SML
-;; SQL Tcl Tex Vera Verilog VHDL Vim YACC
-
-;; Contains some useful functions features for developers similar to
-;; those from VisualAssist.  Remember that convenient M-o, M-g and M-m?
+;; It contains some useful functions features for developers:
 
 ;; 1) Tag navigation.
 ;;
@@ -55,10 +49,9 @@
 ;;    searched in the same directory. You can adjust body to header
 ;;    correspondence customizing taglist-header-switches variable.
 
-;; taglist uses ctags (http://ctags.sourceforge.net/)
-;; https://ctags.io/
+;; Taglist uses ctags as backend (https://ctags.io/ or http://ctags.sourceforge.net/)
 
-;; Usage:
+;;; Usage:
 
 ;; 1) Install ctags(exuberant-ctags) package
 ;; 2) Add convenient keymaps for fast taglist calls in prog-mode
