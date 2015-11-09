@@ -293,7 +293,7 @@ f:function;s:subroutine")
     ("javascript" "JavaScript;c:class;m:method;v:global;f:function;p:properties")
 
     ;; lisp language
-    ("lisp" "Lisp;f:function")
+    ("lisp" "Lisp;v:variable;f:function;c:custom")
 
     ;; lua language
     ("lua" "Lua;f:function")
@@ -470,18 +470,6 @@ f:function;p:procedure;P:package")
     ;; (message "last language = %s" language)
     language))
 
-(defsubst taglist-filter-unsupport-kinds (language kinds)
-  "Return the supported kinds of current version `ctags'."
-  (let ((buffer-string nil)
-        (ctags-config nil ))
-    ;; (setq buffer-string (apply #'taglist-ctags-process-string
-    ;;                            "ctags" (append (list (concat "--list-kinds=" language)))))
-
-    ;; (setq ctags-config (cdr (split-string kinds ";" t)))
-    ;;(message "ctags-config = %S" ctags-config)
-    ;;(message "buffer-string = %s" buffer-string)
-    kinds))
-
 (defun taglist-get-ctags-language-config (detected-language)
   "get ctags language config"
   (let ((language-config nil)
@@ -493,11 +481,7 @@ f:function;p:procedure;P:package")
 
       (if (string= detected-language (car (elt taglist-language-to-ctags-alist i)))
           (progn
-            ;; (setq language-config (taglist-filter-unsupport-kinds
-            ;;                        detected-language
-            ;;                        (nth 1 (elt taglist-language-to-ctags-alist i))))
-            (setq language-config  (nth 1 (elt taglist-language-to-ctags-alist i)))
-            ))
+            (setq language-config  (nth 1 (elt taglist-language-to-ctags-alist i)))))
       (setq i (1+ i)))
     (if (not language-config)
         (error "Unsupported language: %s" detected-language))
@@ -513,14 +497,53 @@ f:function;p:procedure;P:package")
     (setq ctags-language (car (split-string ctags-language-config ";" t)))
     ctags-language))
 
+(defsubst taglist-filter-unsupport-kinds (ctags-language expect-ctags-kinds)
+  "Return the supported kinds of current version `ctags'."
+  (let ((all-kinds nil)
+        (ctags-config nil)
+        (actual-ctags-kinds expect-ctags-kinds)
+        )
+    (setq all-kinds
+          (mapcar (lambda (line) (substring line 0 1) )
+                  (split-string
+                   (apply
+                    #'taglist-ctags-process-string
+                    "ctags" (append
+                             (list (concat "--list-kinds=" ctags-language)))) "\n" t)))
+    (let ((found nil)
+          (element nil)
+          (i 0))
+
+      (dolist (kind expect-ctags-kinds)
+        (setq found nil)
+        (setq i 0)
+
+        (while (and (not found)
+                    (< i (length all-kinds)))
+
+          (setq element (elt all-kinds i))
+
+          (if (string= (substring kind 0 1) element)
+              (setq found t))
+
+          (setq i (1+ i)))
+
+        (if (not found)
+            (progn
+              (setq actual-ctags-kinds (remove kind actual-ctags-kinds))))))
+    actual-ctags-kinds))
+
 (defun taglist-get-ctags-language-full-kinds (detected-language)
   "Get full ctags language kinds by detected-language. e.g.
   \"C;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function\"
   return a list (\"d:macro\" \"g:enum\" \"s:struct\" \"u:union\"
   \"t:typedef\" \"v:variable\" \"f:function\")"
-  (let ((ctags-language-config (taglist-get-ctags-language-config detected-language))
-        (ctags-language-kinds nil))
-    (setq ctags-language-kinds (cdr (split-string ctags-language-config ";" t)))
+  (let* ((ctags-language-config-string (taglist-get-ctags-language-config detected-language))
+         (ctags-language-config (split-string ctags-language-config-string ";" t))
+         (ctags-language-kinds nil))
+    (setq ctags-language-kinds (taglist-filter-unsupport-kinds
+                                (car ctags-language-config)
+                                (cdr ctags-language-config)))
     ctags-language-kinds))
 
 (defun taglist-get-ctags-language-short-kinds (detected-language)
