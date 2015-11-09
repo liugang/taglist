@@ -158,21 +158,26 @@ for example *.hpp <--> *.cpp."
 (defvar taglist-current-major-mode nil
   "current major mode")
 
-(defface taglist-tag-type-face
-  '((t :inherit font-lock-function-name-face :height 1.2))
-  "Face for highlighting tag's type.")
+(defface taglist-tag-type
+  '((((class color))
+     (:foreground "blue" :height 1.2))
+    (t (:weight bold)))
+  "Regexp matching the text identifying the file in `taglist-mode'."
+  :group 'taglist)
 
-(defvar taglist-tag-type-face 'taglist-tag-type-face)
+(defvar taglist-tag-type-face 'taglist-tag-type)
 
-(defconst taglist-font-lock-keywords-1
-  (list
-   '("^[^ ]*$" . taglist-tag-type-face)
-   )
-  "Minimal highlighting expressions for taglist mode")
+(defvar taglist-tag-type-re
+  (concat "^[^ ]*$")
+  "Regexp matching the text identifying a tag type name.")
 
-(defvar taglist-font-lock-keywords taglist-font-lock-keywords-1
-  "Default highlighting expressions for taglist mode")
+(defvar taglist-font-lock-keywords
+  ;; We use `eval' so as to use the buffer-local value of taglist-tag-type-re if
+  ;; applicable.
+  '((eval . `(,taglist-tag-type-re . taglist-tag-type-face))))
 
+(defconst taglist-font-lock-defaults
+  '(taglist-font-lock-keywords t nil nil nil))
 
 ;; major mode name map to language
 ;; (add-to-list 'taglist-major-to-language-alist '("<lang>-mode" "<lang>"))
@@ -469,11 +474,11 @@ f:function;p:procedure;P:package")
   "Return the supported kinds of current version `ctags'."
   (let ((buffer-string nil)
         (ctags-config nil ))
-    (setq buffer-string (apply #'taglist-ctags-process-string
-                               "ctags" (append (list (concat "--list-kinds=" language)))))
+    ;; (setq buffer-string (apply #'taglist-ctags-process-string
+    ;;                            "ctags" (append (list (concat "--list-kinds=" language)))))
 
-    (setq ctags-config (cdr (split-string kinds ";" t)))
-    ;;(message "ctags-config = %s" ctags-config)
+    ;; (setq ctags-config (cdr (split-string kinds ";" t)))
+    ;;(message "ctags-config = %S" ctags-config)
     ;;(message "buffer-string = %s" buffer-string)
     kinds))
 
@@ -488,9 +493,11 @@ f:function;p:procedure;P:package")
 
       (if (string= detected-language (car (elt taglist-language-to-ctags-alist i)))
           (progn
-            (setq language-config (taglist-filter-unsupport-kinds
-                                   detected-language
-                                   (nth 1 (elt taglist-language-to-ctags-alist i))))))
+            ;; (setq language-config (taglist-filter-unsupport-kinds
+            ;;                        detected-language
+            ;;                        (nth 1 (elt taglist-language-to-ctags-alist i))))
+            (setq language-config  (nth 1 (elt taglist-language-to-ctags-alist i)))
+            ))
       (setq i (1+ i)))
     (if (not language-config)
         (error "Unsupported language: %s" detected-language))
@@ -906,7 +913,7 @@ This function is recommended to be bound to some convinient hotkey."
   ;; overlays used to highligh search string matches in tag names
   (make-local-variable 'taglist-overlays)
   (make-local-variable 'taglist-current-language)
-  (set (make-local-variable 'font-lock-defaults) '(taglist-font-lock-keywords))
+  (set (make-local-variable 'font-lock-defaults) taglist-font-lock-defaults)
   ;; (message "current-line = %d" taglist-current-line)
   (setq taglist-overlays nil)
   (setq taglist-search-string "")
