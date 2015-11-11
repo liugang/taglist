@@ -168,7 +168,7 @@ for example *.hpp <--> *.cpp."
 (defvar taglist-tag-type-face 'taglist-tag-type)
 
 (defvar taglist-tag-type-re
-  (concat "^[^ ]*$")
+  (concat "^\\w.*$")
   "Regexp matching the text identifying a tag type name.")
 
 (defvar taglist-font-lock-keywords
@@ -179,9 +179,103 @@ for example *.hpp <--> *.cpp."
 (defconst taglist-font-lock-defaults
   '(taglist-font-lock-keywords t nil nil nil))
 
+
+;; TODO: maintain the list by ctags --list-maps and
+;; https://github.com/github/linguist/blob/master/lib/linguist/languages.yml
+
+;; format: (<file name pattern> <detected language>)
+(defvar taglist-filename-to-language-alist
+  '(
+    ("\\.i\\'" . "c")
+    ("\\.lex\\'" . "c")
+    ("\\.[ch]\\'" . "c")
+    ("\\.x[bp]m\\'" . "c")
+    ("\\.xs\\'" . "c")
+    ("\\.h$" . "c++")
+    ("\\.ii\\'" . "c++")
+    ("\\.\\(CC?\\|HH?\\)\\'" . "c++")
+    ("\\.[ch]\\(pp\\|xx\\|\\+\\+\\)\\'" . "c++")
+    ("\\.\\(cc\\|hh\\)\\'" . "c++")
+    ("\\.y\\(acc\\)?\\'" . "yacc")
+    ("\\.vim\\(rc\\)?$" . "vim")
+    ("\\.vim\\(rc\\|peratorrc\\)?$" . "vim")
+    ("\\.exrc\\'" . "vim")
+    ("[._]?g?vimrc\\'" . "vim")
+    ("\\.vim\\'" . "vim")
+    ("\\.go\\'" . "go")
+    ("\\.l\\'" . "lisp")
+    ("\\.li?sp\\'" . "lisp")
+    ("\\.ml\\'" . "lisp")
+    ("\\.asd\\'" . "lisp")
+    ("\\.el\\'" . "lisp")
+    ("Project\\.ede\\'" . "lisp")
+    ("[]>:/\\]\\..*\\(emacs\\|gnus\\|viper\\)\\'" . "lisp")
+    ("\\`\\..*emacs\\'" . "lisp")
+    ("[:/]_emacs\\'" . "lisp")
+    ("\\.[tT]e[xX]\\'" . "tex")
+    ("\\.ins\\'" . "tex")
+    ("\\.sty\\'" . "tex")
+    ("\\.cl[so]\\'" . "tex")
+    ("\\.bbl\\'" . "tex")
+    ("\\.ltx\\'" . "tex")
+    ("\\.html?\\'" . "html")
+    ("\\.djhtml\\'" . "html")
+    ("\\.phtml\\'" . "html")
+    ("\\.[sx]?html?\\(\\.[a-zA-Z_]+\\)?\\'" . "html")
+    ("\\.as[cp]x\\'" . "asp")
+    ("\\.asp\\'" . "asp")
+    ("\\.php\\'" . "php")
+    ("/crontab\\.X*[0-9]+\\'" . "sh")
+    ("\\.[ck]?sh\\'\\|\\.shar\\'\\|/\\.z?profile\\'" . "sh")
+    ("\\.bash\\'" . "sh")
+    ("\\(/\\|\\`\\)\\.\\(bash_\\(profile\\|history\\|log\\(in\\|out\\)\\)\\|z?log\\(in\\|out\\)\\)\\'" . "sh")
+    ("\\(/\\|\\`\\)\\.\\(shrc\\|[kz]shrc\\|bashrc\\|t?cshrc\\|esrc\\)\\'" . "sh")
+    ("\\(/\\|\\`\\)\\.\\([kz]shenv\\|xinitrc\\|startxrc\\|xsession\\)\\'" . "sh")
+    ("\\.m?spec\\'" . "sh")
+    ("\\(?:\\.rb\\|ru\\|rake\\|thor\\|jbuilder\\|gemspec\\|podspec\\|/\\(?:Gem\\|Rake\\|Cap\\|Thor\\|Vagrant\\|Guard\\|Pod\\)file\\)\\'" . "ruby")
+    ("\\.py\\'" . "python")
+    ("\\.awk\\'" . "awk")
+    ("\\.java\\'" . "java")
+    ("\\.m\\'" . "objc")
+    ("\\.\\(bat\\|cmd\\)\\'" . "dosbatch")
+    ("\\.\\(scm\\|stk\\|ss\\|sch\\)\\'" . "scheme")
+    ("\\.scm\\.[0-9]*\\'" . "scheme")
+    ("\\.oak\\'" . "scheme")
+    ("\\.[fF]\\'" . "fortran")
+    ("\\.for\\'" . "fortran")
+    ("\\.f9[05]\\'" . "fortran")
+    ("\\.f0[38]\\'" . "fortran")
+    ("\\.p\\'" . "pascal")
+    ("\\.pas\\'" . "pascal")
+    ("\\.ad[abs]\\'" . "ada")
+    ("\\.ad[bs].dg\\'" . "ada")
+    ("\\.\\([pP]\\([Llm]\\|erl\\|od\\)\\|al\\)\\'" . "perl")
+    ("\\.mk\\'" . "make")
+    ("\\.make\\'" . "make")
+    ("[Mm]akefile\\'" . "make")
+    ("\\.[sS]\\'" . "asm")
+    ("\\.asm\\'" . "asm")
+    ("/\\.[a-z0-9-]*gdbinit" . "gdb-script")
+    ("-gdb\\.gdb" . "gdb-script")
+    ("\\.sql\\'" . "sql")
+    ("\\.m[4c]\\'" . "m4")
+    ("\\.i?tcl\\'" . "tcl")
+    ("\\.exp\\'" . "tcl")
+    ("\\.itk\\'" . "tcl")
+    ("\\.svgz?\\'" . "xml")
+    ("\\.x[ms]l\\'" . "xml")
+    ("\\.dbk\\'" . "xml")
+    ("\\.js\\'" . "javascript")
+    ("\\.json\\'" . "javascript")
+    ("\\.[ds]?vh?\\'" . "verilog")
+    ("\\.vhdl?\\'" . "vhdl")
+    ("\\.re?st\\'" . "reStructuredText")
+    )
+  )
+
 ;; major mode name map to language
 ;; (add-to-list 'taglist-major-to-language-alist '("<lang>-mode" "<lang>"))
-
+;; format: (<major mode> <detected language>)
 (defvar taglist-major-to-language-alist
   `(
     ("emacs-lisp-mode" "lisp")
@@ -196,7 +290,7 @@ for example *.hpp <--> *.cpp."
     ("python-mode" "python")
     ("ruby-mode" "ruby")
     ("javascript-mode" "javascript")
-    ("objc-mode" "objc")
+    ("objc-mode" "objectivec")
     ("asm-mode" "asm")
     ("sh-mode" "sh")
     ("shell-script-mode" "sh")
@@ -215,8 +309,12 @@ for example *.hpp <--> *.cpp."
     ("makefile-gmake-mode" "make")
     ;; https://github.com/mcandre/vimrc-mode.git
     ("vimrc-mode" "vim")
+    ("bat-mode" "dosbatch")
+    ("rst-mode" "reStructuredText")
     ))
 
+;; TODO: maintain the list by ctags --list-kinds
+;; format: (<detected language> <ctags language>;<short-kind:full-kind>....)
 (defvar taglist-language-to-ctags-alist
   `(
     ;; Ant language
@@ -241,8 +339,9 @@ for example *.hpp <--> *.cpp."
     ("beta" "BETA;f:fragment;s:slot;v:pattern")
 
     ;; c language
-    ("c" "C;d:macro;g:enum;s:struct;u:union;t:typedef;\
-v:variable;f:function")
+    ("c" "C;c:classes;d:macro definitions;g:enumeration names;\
+n:namespaces;s:structure names;t:typedefs;\
+u:union names;v:variable definitions;f:function definitions")
 
     ;; c++ language
     ("c++" "C++;n:namespace;v:variable;d:macro;t:typedef;\
@@ -281,7 +380,11 @@ i:interface;k:type;l:label;m:module;n:namelist;t:derived;v:variable;\
 f:function;s:subroutine")
 
     ;; GO language
-    ("go" "Go;f:function;p:package;t:struct")
+    ("go" "Go;p:packages;c:constants;t:types;v:variables;s:structs;i:interfaces;m:struct members;f:functions")
+
+    ("objectivec" "ObjectiveC;i:class interface;I:class implementation;P:Protocol;m:Object's method;\
+c:Class' method;v:Global variable;F:Object field;f:A function;p:A property;t:A type alias;\
+s:A type structure;e:An enumeration;MA preprocessor macro")
 
     ;; HTML language
     ("html" "HTML;a:anchor;f:function")
@@ -290,7 +393,7 @@ f:function;s:subroutine")
     ("java" "Java;p:package;c:class;i:interface;g:enum;f:field;m:method")
 
     ;; javascript language
-    ("javascript" "JavaScript;c:class;m:method;v:global;f:function;p:properties")
+    ("javascript" "JavaScript;c:class;m:method;v:global;f:function;p:properties;C:constants")
 
     ;; lisp language
     ("lisp" "Lisp;v:variable;f:function;c:custom")
@@ -299,7 +402,7 @@ f:function;s:subroutine")
     ("lua" "Lua;f:function")
 
     ;; makefiles
-    ("make" "Make;m:macro")
+    ("make" "Make;m:macro;t:targets")
 
     ;; Matlab
     ("matlab" "MatLab;f:function")
@@ -312,13 +415,16 @@ f:function;m:method;C:constructor;e:exception")
     ("pascal" "Pascal;f:function;p:procedure")
 
     ;; perl language
-    ("perl" "Perl;c:constant;l:label;p:package;s:subroutine")
+    ("perl" "Perl;f:formats;c:constant;l:label;p:package;s:subroutine")
+
+    ;; Perl6
+    ("perl6" "Perl6;c:classes;g:grammars;m:methods;o:modules;p:packages;r:roles;u:rules;b:submethods;s:subroutines:t:tokens")
 
     ;; php language
-    ("php" "PHP;c:class;i:interface;d:constant;v:variable;f:function")
+    ("php" "PHP;c:classes;d:constant definitions;i:interfaces;n:namespaces;t:traits;v:variables;f:functions")
 
     ;; python language
-    ("python" "Python;c:class;m:member;f:function")
+    ("python" "Python;i:imports;c:classes;m:class members;v:variables;f:functions;")
 
     ;; cython language
     ("pyrex" "Python;c:classe;m:memder;f:function")
@@ -366,18 +472,37 @@ p:parts;P:paragraphs;G:subparagraphs")
 p:program;P:prototype;t:task;T:typedef;v:variable;x:externvar")
 
     ;; verilog language
-    ("verilog" "Verilog;m:module;c:constant;P:parameter;e:event;\
-r:register;t:task;w:write;p:port;v:variable;f:function")
+    ("verilog" "Verilog;c:constants;e:events;m:modules;n:net data types;p:ports;r:register data types;t:tasks;b:blocks;f:functions")
 
     ;; VHDL
     ("vhdl" "VHDL;c:constant;t:type;T:subtype;r:record;e:entity;\
 f:function;p:procedure;P:package")
 
     ;; vim language
-    ("vim" "Vim;v:variable;a:autocmds;c:commands;m:map;f:function")
+    ("vim" "Vim;v:variable;a:autocmds;c:commands;m:map;n:vimball filename;f:function")
 
     ;; yacc language
     ("yacc" "YACC;l:label")
+
+    ("zephir" "Zephir;c:classes;d:constant;i:interfaces;n:namespaces;t:traits;v:variables;f:functions")
+
+    ("windres" "WindRes;d:dialogs;m:menus;i:icons;b:bitmaps;c:cursors;f:fonts;v:versions;a:accelerators")
+
+    ("systemverilog" "SystemVerilog;c:constants;e:events;m:modules;n:net data types;p:ports;\
+r:register data types;t:tasks;b:blocks;A:assertions;C:classes;V:covergroups;I:interfaces;M:modports;\
+K:packages;P:programs;R:properties;T:type declarations;f:functions" )
+
+    ("rust" "Rust;n:module;s:structural type;i:trait interface;c:implementation;g:Enum;t:Type Alias;\
+v:Global variable;M:Macro Definition;m:A struct field;e:An enum variant;F:A method;f:Function")
+
+    ("reStructuredText" "reStructuredText;c:chapters;s:sections;S:subsections;t:subsubsections")
+
+    ("r" "R;l:libraries;s:sources;g:global variables;v:function variables;f:functions")
+
+    ("json" "JSON;o:objects;a:arrays;n:numbers;s:strings;b:booleans;z:nulls")
+    ;; ("gdb-script" "gdbinit;d:definition;t:toplevelVariable") ;; disabled
+
+    ;; ("m4" "m4;d:definition;u:undefinition;") ;; disabled
 
     ))
 
@@ -401,62 +526,91 @@ f:function;p:procedure;P:package")
     ;; (message "detect language by major mode = %s" language)
     language))
 
-;; TODO
+;; TODO, for vim
 (defun taglist-detect-language-by-modeline ()
   "detect language by modeline"
   (let ((language nil))
-    (setq language nil)
+    ;; (setq language nil)
     language))
 
 ;; TODO
 (defun taglist-detect-language-by-shebang ()
   "detect language by shebang"
   (let ((language nil))
-    (setq language nil)
+    ;; (setq language nil)
     language))
 
 (defun taglist-detect-language-by-filename ()
   "detect language by filename"
-  (let ((language nil))
-    (setq language "c")
+  (let ((detected-language nil)
+        (language nil)
+        (filename (buffer-file-name taglist-source-code-buffer)))
 
-    ;; Ant: ant.xml, build.xml
+    ;; Next compare the filename against the entries in taglist-filename-to-language-alist.
+    (if filename
 
-    ;; Asm: *.s *.S *.asm *.ASM *.nasm *.a51 *.A51
-    ;; (who use this?)       *.29[kK] *.[68][68][kKsSxX] *.[xX][68][68]
+        (let ((name filename)
+              (remote-id (file-remote-p filename)))
 
-    ;; Asp: *.asp *.aspx *.asa *.asax *.ascx *.ashx *.asmx *.axd
+          ;; Remove backup-suffixes from file name.
+          (setq name (file-name-sans-versions name))
 
+          ;; Remove remote file name identification.
+          (when (and (stringp remote-id)
+                     (string-match (regexp-quote remote-id) name))
+            (setq name (substring name (match-end 0))))
 
-    ;; Awk: *.awk *.auk *.gawk *.mawk *.nawk
+          (while name
+            ;; Find first matching alist entry.
+            (setq language
+                  (if (memq system-type '(windows-nt cygwin))
+                      ;; System is case-insensitive.
+                      (let ((case-fold-search t))
+                        (assoc-default name taglist-filename-to-language-alist
+                                       'string-match))
+                    ;; System is case-sensitive.
+                    (or
 
-    ;; BlitzBasic: .bb .decls
-    ;; PureBasic: .pb .pbi
-    ;; Visual Basic: .vb .bas .cls .frm .frx .vba .vbhtml .vbs
+                     ;; First match case-sensitively.
+                     (let ((case-fold-search nil))
+                       (assoc-default name taglist-filename-to-language-alist
+                                      'string-match))
 
-    ;; BETA     *.bet
+                     ;; Fallback to case-insensitive match.
+                     (and auto-mode-case-fold
+                          (let ((case-fold-search t))
+                            (assoc-default name taglist-filename-to-language-alist
+                                           'string-match))))))
+            (if (and language
+                     (consp language)
+                     (cadr language))
+                (setq language (car language)
+                      name (substring name 0 (match-beginning 0)))
+              (setq name nil))
 
-    ;; C: *.c *.cats *.idc .w
-    ;; C++: *.c++ *.cc *.cp *.cpp *.cxx *.h *.h++ *.hh *.hp *.hpp *.hxx *.C *.H .inl .ipp .tcc .tpp
+            (when language
+              (setq detected-language language))
 
-    ;; Emacs Lisp: .el
-    ;;  filename: .emacs .emacs.desktop
-    language))
+            )
+          )
+      )
+    detected-language))
 
 ;; TODO
 (defun taglist-detect-language-by-heuristics ()
   "detect language by heuristics"
   (let ((language nil))
-    (setq language nil)
+    ;; (setq language nil)
     language))
 
 (defun taglist-detect-language ()
   "return programming language of the file"
 
   (let ((language (taglist-detect-language-by-major-mode)))
+  ;;(let ((language nil)) ;; for test
 
     (if (not language)
-        (setq language (taglist-detect-language-by-shebang)))
+        (setq language (taglist-detect-language-by-modeline)))
 
     (if (not language)
         (setq language (taglist-detect-language-by-shebang)))
