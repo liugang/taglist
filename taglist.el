@@ -289,7 +289,7 @@ for example *.hpp <--> *.cpp."
     ("java-mode" "java")
     ("python-mode" "python")
     ("ruby-mode" "ruby")
-    ("javascript-mode" "javascript")
+    ("js-mode" "javascript")
     ("objc-mode" "objectivec")
     ("asm-mode" "asm")
     ("sh-mode" "sh")
@@ -817,9 +817,9 @@ buffer and sets the point to a tag, corresponding the line."
 
   ;; let s:tlist_def_c_settings = 'c;d:macro;g:enum;s:struct;u:union;t:typedef;v:variable;f:function'
   ;; (setq types (list "d:Macro" "g:Enum" "s:Struct" "u:Union" "t:Typedef" "v:Variable" "f:Function"))
-  (setq types (taglist-get-ctags-language-full-kinds taglist-current-language))
 
-  (let ((taglist-actual-tags_tmp
+  (let ((types (taglist-get-ctags-language-full-kinds taglist-current-language))
+        (taglist-actual-tags-tmp
          ;; remove-if-not: Remove all items not satisfying search string.
          (remove-if-not
           (lambda (element)
@@ -827,7 +827,7 @@ buffer and sets the point to a tag, corresponding the line."
           taglist-all-tags)))
 
     ;; ("DEBUG" 11 "d") ("main" 18 "f")
-    (setq taglist-actual-tags (taglist-gen-display-struct types taglist-actual-tags_tmp)))
+    (setq taglist-actual-tags (taglist-gen-display-struct types taglist-actual-tags-tmp)))
 
   ;; (message "taglist-actual-tags = %S" taglist-actual-tags)
 
