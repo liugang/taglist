@@ -139,6 +139,10 @@ for example *.hpp <--> *.cpp."
 (defvar taglist-all-tags nil
   "Collection of tags used when searching for current selection.")
 
+(defvar taglist-tmp-file nil
+  "save current buffer to a temp file. fix ctags can't open a gz
+  files, example: ido.el.gz")
+
 (defvar taglist-actual-tags nil
   "Collection of actual tags used when searching for current selection.")
 
@@ -730,7 +734,7 @@ v:Global variable;M:Macro Definition;m:A struct field;e:An enum variant;F:A meth
                               "--sort=no"
                               (concat "--language-force=" ctags-language)
                               (concat "--" ctags-language "-kinds=" ctags-lang-kinds)
-                              file
+                              taglist-tmp-file
                               )))
          "\n" t)
       (insert (concat "Warnning: " (buffer-name taglist-source-code-buffer) " doesn't exist on your disk, you should save it first!\n"))
@@ -893,6 +897,7 @@ buffer and sets the point to a tag, corresponding the line."
   "Kill tag list buffer."
   (interactive)
   (kill-buffer (current-buffer))
+  (delete-file taglist-tmp-file)
   (switch-to-buffer taglist-source-code-buffer))
 
 (defvar taglist-mode-map
@@ -1073,7 +1078,8 @@ This function is recommended to be bound to some convinient hotkey."
   (setq taglist-source-code-buffer (current-buffer))
   (setq taglist-current-line (line-number-at-pos))
   (setq taglist-current-major-mode major-mode)
-
+  (setq taglist-tmp-file (make-temp-file "taglist."))
+  (write-region (point-min) (point-max) taglist-tmp-file)
   (switch-to-buffer (get-buffer-create (concat (buffer-name (current-buffer)) " tag list")) t)
   (taglist-mode))
 
